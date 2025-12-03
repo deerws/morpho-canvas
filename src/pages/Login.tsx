@@ -1,42 +1,71 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Table2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+});
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useMorphoStore();
+  const location = useLocation();
+  const { signIn, user, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, from]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     setIsLoading(true);
 
-    // Demo login - in production, this would validate against backend
-    setTimeout(() => {
-      if (email && password) {
-        setUser({
-          id: 'demo-user',
-          name: email.split('@')[0],
-          email,
-          role: 'student',
-        });
-        toast.success('Login realizado com sucesso!');
-        navigate('/dashboard');
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Email ou senha incorretos');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Email não confirmado. Verifique sua caixa de entrada.');
       } else {
-        toast.error('Por favor, preencha todos os campos');
+        toast.error('Erro ao fazer login. Tente novamente.');
       }
       setIsLoading(false);
-    }, 500);
+      return;
+    }
+
+    toast.success('Login realizado com sucesso!');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -96,10 +125,6 @@ export default function Login() {
           <div className="mt-6 text-center text-sm">
             <Link to="/register" className="text-primary hover:underline">
               Cadastrar nova conta
-            </Link>
-            <span className="mx-2 text-muted-foreground">•</span>
-            <Link to="/forgot-password" className="text-primary hover:underline">
-              Esqueci minha senha
             </Link>
           </div>
         </CardContent>
