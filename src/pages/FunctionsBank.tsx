@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, ChevronRight } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useFunctions, ProductFunction } from '@/hooks/useFunctions';
+import { usePrinciples, Principle } from '@/hooks/usePrinciples';
 import { FunctionModal } from '@/components/modals/FunctionModal';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
-import { ProductFunction, Principle, CATEGORY_COLORS } from '@/types/morpho';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,10 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
 
 export default function FunctionsBank() {
-  const { functions, principles, deleteFunction, deletePrinciple } = useMorphoStore();
+  const { functions, deleteFunction, isLoading: loadingFunctions } = useFunctions();
+  const { principles, deletePrinciple, isLoading: loadingPrinciples } = usePrinciples();
   const [searchFunction, setSearchFunction] = useState('');
   const [searchPrinciple, setSearchPrinciple] = useState('');
   const [filterFunction, setFilterFunction] = useState<string>('all');
@@ -59,10 +59,8 @@ export default function FunctionsBank() {
     if (!itemToDelete) return;
     if (itemToDelete.type === 'function') {
       deleteFunction(itemToDelete.id);
-      toast.success('Função removida com sucesso');
     } else {
       deletePrinciple(itemToDelete.id);
-      toast.success('Princípio removido com sucesso');
     }
     setDeleteDialogOpen(false);
     setItemToDelete(null);
@@ -81,6 +79,8 @@ export default function FunctionsBank() {
 
   const getFunctionColor = (functionId: string) =>
     functions.find(f => f.id === functionId)?.color || '#6b7280';
+
+  const isLoading = loadingFunctions || loadingPrinciples;
 
   return (
     <DashboardLayout>
@@ -116,7 +116,11 @@ export default function FunctionsBank() {
             </div>
 
             <div className="grid gap-4">
-              {filteredFunctions.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredFunctions.length === 0 ? (
                 <Card className="py-12">
                   <div className="text-center text-muted-foreground">
                     <p>Nenhuma função encontrada</p>
@@ -187,7 +191,11 @@ export default function FunctionsBank() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredPrinciples.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-12 col-span-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredPrinciples.length === 0 ? (
                 <Card className="py-12 col-span-full">
                   <div className="text-center text-muted-foreground">
                     <p>Nenhum princípio encontrado</p>

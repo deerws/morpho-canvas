@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useConcepts } from '@/hooks/useConcepts';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples } from '@/hooks/usePrinciples';
 import { toast } from 'sonner';
 
 interface ConceptSaveModalProps {
@@ -23,7 +25,9 @@ export function ConceptSaveModal({
   selections,
   onSaved 
 }: ConceptSaveModalProps) {
-  const { addConcept, functions, principles } = useMorphoStore();
+  const { addConcept, isAdding } = useConcepts();
+  const { functions } = useFunctions();
+  const { principles } = usePrinciples();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
@@ -35,16 +39,13 @@ export function ConceptSaveModal({
     }
 
     addConcept({
-      id: crypto.randomUUID(),
       name,
       matrixId,
       selections,
       description,
-      createdAt: new Date().toISOString(),
       generatedBy: 'manual',
     });
 
-    toast.success('Conceito salvo com sucesso!');
     setName('');
     setDescription('');
     onSaved();
@@ -112,7 +113,7 @@ export function ConceptSaveModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isAdding}>
               Salvar Conceito
             </Button>
           </DialogFooter>

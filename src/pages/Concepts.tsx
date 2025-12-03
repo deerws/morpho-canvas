@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useConcepts } from '@/hooks/useConcepts';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples } from '@/hooks/usePrinciples';
+import { useMatrices } from '@/hooks/useMatrices';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,10 +28,15 @@ import {
 import { toast } from 'sonner';
 
 export default function Concepts() {
-  const { concepts, deleteConcept, functions, principles, matrices } = useMorphoStore();
+  const { concepts, deleteConcept, isLoading: loadingConcepts } = useConcepts();
+  const { functions, isLoading: loadingFunctions } = useFunctions();
+  const { principles, isLoading: loadingPrinciples } = usePrinciples();
+  const { matrices, isLoading: loadingMatrices } = useMatrices();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewConcept, setViewConcept] = useState<string | null>(null);
+
+  const isLoading = loadingConcepts || loadingFunctions || loadingPrinciples || loadingMatrices;
 
   const filteredConcepts = concepts.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -37,7 +45,6 @@ export default function Concepts() {
   const handleDelete = () => {
     if (deleteId) {
       deleteConcept(deleteId);
-      toast.success('Conceito removido com sucesso');
       setDeleteId(null);
     }
   };
@@ -108,7 +115,11 @@ export default function Concepts() {
           />
         </div>
 
-        {filteredConcepts.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredConcepts.length === 0 ? (
           <Card className="py-16">
             <div className="text-center">
               <Lightbulb className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />

@@ -1,31 +1,45 @@
 import { useState } from 'react';
-import { User, Mail, Shield, Palette } from 'lucide-react';
+import { User, Mail, Shield, Palette, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { user, setUser } = useMorphoStore();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [role, setRole] = useState<'teacher' | 'student'>(user?.role || 'student');
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.user_metadata?.name || '');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
-    if (user) {
-      setUser({
-        ...user,
-        name,
-        email,
-        role: role as 'teacher' | 'student',
-      });
+  const email = user?.email || '';
+  const role = user?.user_metadata?.role || 'student';
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      data: { name }
+    });
+
+    if (error) {
+      toast.error('Erro ao salvar configurações');
+    } else {
+      // Also update the profiles table
+      await supabase
+        .from('profiles')
+        .update({ name })
+        .eq('id', user.id);
+      
       toast.success('Configurações salvas com sucesso!');
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -52,12 +66,12 @@ export default function Settings() {
             <div className="flex items-center gap-4">
               <Avatar className="w-20 h-20">
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {name?.charAt(0) || 'U'}
+                  {name?.charAt(0) || email?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium text-foreground">{name || 'Usuário'}</h3>
-                <p className="text-sm text-muted-foreground capitalize">{role}</p>
+                <h3 className="font-medium text-foreground">{name || email || 'Usuário'}</h3>
+                <p className="text-sm text-muted-foreground capitalize">{role === 'teacher' ? 'Professor' : 'Aluno'}</p>
               </div>
             </div>
 
@@ -83,27 +97,26 @@ export default function Settings() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    disabled
+                    className="pl-10 bg-muted"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Tipo de usuário</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as 'teacher' | 'student')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Aluno</SelectItem>
-                    <SelectItem value="teacher">Professor</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Tipo de usuário</Label>
+                <Input
+                  value={role === 'teacher' ? 'Professor' : 'Aluno'}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">O tipo de usuário é definido no cadastro</p>
               </div>
             </div>
 
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Salvar alterações
             </Button>
           </CardContent>
@@ -124,7 +137,7 @@ export default function Settings() {
               Alterar senha
             </Button>
             <p className="text-sm text-muted-foreground">
-              Funcionalidade disponível quando conectado a um backend
+              Em breve: alteração de senha
             </p>
           </CardContent>
         </Card>

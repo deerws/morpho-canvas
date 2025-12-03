@@ -1,12 +1,22 @@
 import { Link } from 'react-router-dom';
-import { Plus, Table2, Lightbulb, TrendingUp, Clock } from 'lucide-react';
+import { Plus, Table2, Lightbulb, TrendingUp, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useMatrices } from '@/hooks/useMatrices';
+import { useConcepts } from '@/hooks/useConcepts';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples } from '@/hooks/usePrinciples';
 
 export default function Dashboard() {
-  const { matrices, concepts, functions, principles, user } = useMorphoStore();
+  const { user } = useAuth();
+  const { matrices, isLoading: loadingMatrices } = useMatrices();
+  const { concepts, isLoading: loadingConcepts } = useConcepts();
+  const { functions, isLoading: loadingFunctions } = useFunctions();
+  const { principles, isLoading: loadingPrinciples } = usePrinciples();
+
+  const isLoading = loadingMatrices || loadingConcepts || loadingFunctions || loadingPrinciples;
 
   const stats = [
     { title: 'Matrizes Criadas', value: matrices.length, icon: Table2, color: 'bg-primary' },
@@ -15,13 +25,15 @@ export default function Dashboard() {
     { title: 'Princípios Cadastrados', value: principles.length, icon: Clock, color: 'bg-destructive' },
   ];
 
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário';
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Olá, {user?.name?.split(' ')[0]}! 👋
+              Olá, {userName.split(' ')[0]}!
             </h1>
             <p className="text-muted-foreground mt-1">
               Bem-vindo ao MorphoDesign. Comece criando uma nova matriz morfológica.
@@ -47,7 +59,11 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                ) : (
+                  <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -60,7 +76,11 @@ export default function Dashboard() {
               <CardDescription>Seus últimos projetos de matriz morfológica</CardDescription>
             </CardHeader>
             <CardContent>
-              {matrices.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : matrices.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Table2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>Nenhuma matriz criada ainda</p>

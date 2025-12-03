@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMorphoStore } from '@/store/morphoStore';
-import { ProductFunction, CATEGORY_COLORS } from '@/types/morpho';
+import { useFunctions, ProductFunction } from '@/hooks/useFunctions';
+import { CATEGORY_COLORS } from '@/types/morpho';
 import { toast } from 'sonner';
 
 interface FunctionModalProps {
@@ -18,7 +18,7 @@ interface FunctionModalProps {
 const categories: ProductFunction['category'][] = ['Mecânica', 'Elétrica', 'Térmica', 'Hidráulica', 'Química', 'Outra'];
 
 export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionModalProps) {
-  const { addFunction, updateFunction, user } = useMorphoStore();
+  const { addFunction, updateFunction, isAdding, isUpdating } = useFunctions();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<ProductFunction['category']>('Mecânica');
@@ -50,22 +50,20 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
     }
 
     if (editingFunction) {
-      updateFunction(editingFunction.id, { name, description, category, color });
-      toast.success('Função atualizada com sucesso');
+      updateFunction({ id: editingFunction.id, name, description, category, color });
     } else {
       addFunction({
-        id: crypto.randomUUID(),
         name,
         description,
         category,
         color,
-        createdBy: user?.id || 'unknown',
         isPublic: true,
       });
-      toast.success('Função criada com sucesso');
     }
     onOpenChange(false);
   };
+
+  const isLoading = isAdding || isUpdating;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,7 +130,7 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isLoading}>
               {editingFunction ? 'Salvar' : 'Criar Função'}
             </Button>
           </DialogFooter>

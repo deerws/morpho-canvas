@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples } from '@/hooks/usePrinciples';
 import { cn } from '@/lib/utils';
 
 interface PrincipleSearchModalProps {
@@ -23,7 +24,8 @@ export function PrincipleSearchModal({
   onSelect,
   onCreateNew 
 }: PrincipleSearchModalProps) {
-  const { principles, functions } = useMorphoStore();
+  const { principles } = usePrinciples();
+  const { functions } = useFunctions();
   const [search, setSearch] = useState('');
 
   const currentFunction = functions.find(f => f.id === functionId);
@@ -35,10 +37,8 @@ export function PrincipleSearchModal({
         p.description.toLowerCase().includes(search.toLowerCase()) ||
         p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
       
-      // Show principles for current function first, then all others
       return matchesSearch;
     }).sort((a, b) => {
-      // Prioritize principles for the current function
       if (a.functionId === functionId && b.functionId !== functionId) return -1;
       if (b.functionId === functionId && a.functionId !== functionId) return 1;
       return b.usageCount - a.usageCount;
