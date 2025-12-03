@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Table2, Edit2, Trash2, Calendar } from 'lucide-react';
+import { Plus, Search, Table2, Edit2, Trash2, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useMatrices } from '@/hooks/useMatrices';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,10 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
 
 export default function Matrices() {
-  const { matrices, deleteMatrix, functions } = useMorphoStore();
+  const { matrices, deleteMatrix, isLoading } = useMatrices();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -30,7 +29,6 @@ export default function Matrices() {
   const handleDelete = () => {
     if (deleteId) {
       deleteMatrix(deleteId);
-      toast.success('Matriz removida com sucesso');
       setDeleteId(null);
     }
   };
@@ -71,7 +69,11 @@ export default function Matrices() {
           />
         </div>
 
-        {filteredMatrices.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredMatrices.length === 0 ? (
           <Card className="py-16">
             <div className="text-center">
               <Table2 className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />

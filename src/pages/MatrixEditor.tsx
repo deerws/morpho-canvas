@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Edit2, X } from 'lucide-react';
+import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useMatrices, useMatrix } from '@/hooks/useMatrices';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples } from '@/hooks/usePrinciples';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
@@ -17,15 +19,18 @@ import { cn } from '@/lib/utils';
 export default function MatrixEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { matrices, functions, principles, addMatrix, updateMatrix, user, incrementPrincipleUsage } = useMorphoStore();
+  const { addMatrix, updateMatrix, isAdding } = useMatrices();
+  const { data: existingMatrix, isLoading: loadingMatrix } = useMatrix(id === 'new' ? undefined : id);
+  const { functions, isLoading: loadingFunctions } = useFunctions();
+  const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
   
   const isNew = id === 'new';
-  const existingMatrix = matrices.find(m => m.id === id);
 
-  const [matrixName, setMatrixName] = useState(existingMatrix?.name || '');
-  const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>(existingMatrix?.functionIds || []);
+  const [matrixName, setMatrixName] = useState('');
+  const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>([]);
   const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
   const [conceptSelections, setConceptSelections] = useState<Record<string, string>>({});
+  const [matrixId, setMatrixId] = useState<string | null>(null);
   
   const [principleModalOpen, setPrincipleModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -33,10 +38,18 @@ export default function MatrixEditor() {
   const [searchFunctionId, setSearchFunctionId] = useState<string>('');
 
   useEffect(() => {
-    if (!isNew && !existingMatrix) {
+    if (existingMatrix) {
+      setMatrixName(existingMatrix.name);
+      setSelectedFunctionIds(existingMatrix.functionIds);
+      setMatrixId(existingMatrix.id);
+    }
+  }, [existingMatrix]);
+
+  useEffect(() => {
+    if (!isNew && !loadingMatrix && !existingMatrix && id) {
       navigate('/matrices');
     }
-  }, [isNew, existingMatrix, navigate]);
+  }, [isNew, existingMatrix, navigate, loadingMatrix, id]);
 
   const selectedFunctions = functions.filter(f => selectedFunctionIds.includes(f.id));
   
@@ -55,7 +68,7 @@ export default function MatrixEditor() {
   };
 
   const handleRemoveFunction = (functionId: string) => {
-    setSelectedFunctionIds(selectedFunctionIds.filter(id => id !== functionId));
+    setSelectedFunctionIds(selectedFunctionIds.filter(fid => fid !== functionId));
     if (selectedFunction === functionId) {
       setSelectedFunction(null);
     }
@@ -95,36 +108,33 @@ export default function MatrixEditor() {
   const handlePrincipleSelected = (principleId: string) => {
     if (searchFunctionId) {
       handleSelectPrinciple(searchFunctionId, principleId);
-      incrementPrincipleUsage(principleId);
+      incrementUsage(principleId);
     }
     setSearchModalOpen(false);
   };
 
-  const handleSaveMatrix = () => {
+  const handleSaveMatrix = async () => {
     if (!matrixName.trim()) {
       toast.error('Digite um nome para a matriz');
       return;
     }
 
     if (isNew) {
-      const newMatrix = {
-        id: crypto.randomUUID(),
+      const newMatrix = await addMatrix({
         name: matrixName,
-        userId: user?.id || '',
+        description: null,
         functionIds: selectedFunctionIds,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      addMatrix(newMatrix);
-      toast.success('Matriz criada com sucesso!');
-      navigate(`/matrix/${newMatrix.id}`);
-    } else {
-      updateMatrix(id!, {
-        name: matrixName,
-        functionIds: selectedFunctionIds,
-        updatedAt: new Date().toISOString(),
       });
-      toast.success('Matriz salva com sucesso!');
+      if (newMatrix) {
+        setMatrixId(newMatrix.id);
+        navigate(`/matrix/${newMatrix.id}`, { replace: true });
+      }
+    } else if (id) {
+      updateMatrix({
+        id,
+        name: matrixName,
+        functionIds: selectedFunctionIds,
+      });
     }
   };
 
@@ -134,6 +144,18 @@ export default function MatrixEditor() {
   };
 
   const availableFunctions = functions.filter(f => !selectedFunctionIds.includes(f.id));
+
+  const isLoading = loadingMatrix || loadingFunctions || loadingPrinciples;
+
+  if (isLoading && !isNew) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -148,7 +170,8 @@ export default function MatrixEditor() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleSaveMatrix}>
+            <Button variant="outline" onClick={handleSaveMatrix} disabled={isAdding}>
+              {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" />
               Salvar Matriz
             </Button>
@@ -163,17 +186,29 @@ export default function MatrixEditor() {
         </div>
 
         <div className="flex-1 flex gap-4 min-h-0">
-          {/* Matrix Grid - Left Column */}
           <div className="flex-1 overflow-auto">
             <Card className="h-full">
               <CardContent className="p-4">
                 {selectedFunctions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                     <p className="mb-4">Adicione funções para começar a montar sua matriz</p>
-                    <Button onClick={() => setSearchModalOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar Função
-                    </Button>
+                    {availableFunctions.length > 0 && (
+                      <select
+                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleAddFunction(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        defaultValue=""
+                      >
+                        <option value="">+ Adicionar função...</option>
+                        {availableFunctions.map(f => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -275,8 +310,8 @@ export default function MatrixEditor() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 mt-4">
-                  {availableFunctions.length > 0 && (
+                {selectedFunctions.length > 0 && availableFunctions.length > 0 && (
+                  <div className="flex items-center gap-2 mt-4">
                     <select
                       className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                       onChange={(e) => {
@@ -292,15 +327,13 @@ export default function MatrixEditor() {
                         <option key={f.id} value={f.id}>{f.name}</option>
                       ))}
                     </select>
-                  )}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Control Panel - Right Column */}
           <div className="w-80 flex flex-col gap-4">
-            {/* Selected Function Panel */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Função Selecionada</CardTitle>
@@ -352,7 +385,6 @@ export default function MatrixEditor() {
               </CardContent>
             </Card>
 
-            {/* Principles List */}
             {selectedFunction && (
               <Card className="flex-1 min-h-0">
                 <CardHeader className="pb-2">
@@ -397,7 +429,6 @@ export default function MatrixEditor() {
               </Card>
             )}
 
-            {/* Concept in Progress */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Conceito em Formação</CardTitle>
@@ -468,7 +499,7 @@ export default function MatrixEditor() {
       <ConceptSaveModal
         open={conceptModalOpen}
         onOpenChange={setConceptModalOpen}
-        matrixId={id || ''}
+        matrixId={matrixId || id || ''}
         selections={conceptSelections}
         onSaved={() => {
           setConceptSelections({});

@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useMorphoStore } from '@/store/morphoStore';
-import { Principle } from '@/types/morpho';
+import { useFunctions } from '@/hooks/useFunctions';
+import { usePrinciples, Principle } from '@/hooks/usePrinciples';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +20,8 @@ interface PrincipleModalProps {
 }
 
 export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFunctionId }: PrincipleModalProps) {
-  const { addPrinciple, updatePrinciple, functions, user } = useMorphoStore();
+  const { functions } = useFunctions();
+  const { addPrinciple, updatePrinciple, isAdding, isUpdating } = usePrinciples();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
@@ -84,28 +85,38 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
       toast.error('Selecione uma função associada');
       return;
     }
+    if (!description.trim()) {
+      toast.error('A descrição é obrigatória');
+      return;
+    }
 
     if (editingPrinciple) {
-      updatePrinciple(editingPrinciple.id, { title, description, functionId, imageUrl, tags, complexity, cost });
-      toast.success('Princípio atualizado com sucesso');
+      updatePrinciple({ 
+        id: editingPrinciple.id, 
+        title, 
+        description, 
+        functionId, 
+        imageUrl: imageUrl || null, 
+        tags, 
+        complexity, 
+        cost 
+      });
     } else {
       addPrinciple({
-        id: crypto.randomUUID(),
         title,
         description,
         functionId,
-        imageUrl: imageUrl || undefined,
+        imageUrl: imageUrl || null,
         tags,
         complexity,
         cost,
-        usageCount: 0,
-        createdBy: user?.id || 'unknown',
         isPublic: true,
       });
-      toast.success('Princípio criado com sucesso');
     }
     onOpenChange(false);
   };
+
+  const isLoading = isAdding || isUpdating;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,13 +153,14 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="principle-description">Descrição detalhada</Label>
+            <Label htmlFor="principle-description">Descrição detalhada *</Label>
             <Textarea
               id="principle-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descreva detalhadamente o princípio, materiais, funcionamento, aplicações..."
               rows={4}
+              required
             />
           </div>
 
@@ -260,7 +272,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isLoading}>
               {editingPrinciple ? 'Salvar' : 'Criar Princípio'}
             </Button>
           </DialogFooter>
