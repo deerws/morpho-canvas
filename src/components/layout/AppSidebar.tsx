@@ -1,7 +1,7 @@
 import { Home, Table2, List, Lightbulb, Settings, LogOut } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Sidebar,
   SidebarContent,
@@ -25,11 +25,11 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { user, setUser } = useMorphoStore();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
@@ -80,12 +80,12 @@ export function AppSidebar() {
         <div className="flex items-center gap-3">
           <Avatar className="w-9 h-9">
             <AvatarFallback className="bg-secondary text-secondary-foreground">
-              {user?.name?.charAt(0) || 'U'}
+              {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{user?.name || 'Usuário'}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role || 'Aluno'}</p>
+            <p className="text-sm font-medium text-foreground truncate">{user?.user_metadata?.name || user?.email || 'Usuário'}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user?.user_metadata?.role || 'Aluno'}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Table2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMorphoStore } from '@/store/morphoStore';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
+  email: z.string().email('Email inválido').max(255),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword'],
+});
 
 export default function Register() {
   const navigate = useNavigate();
-  const { setUser } = useMorphoStore();
+  const { signUp, user, loading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,33 +31,45 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (user && !loading) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    const validation = registerSchema.safeParse({ name, email, password, confirmPassword });
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setUser({
-        id: crypto.randomUUID(),
-        name,
-        email,
-        role,
-      });
-      toast.success('Conta criada com sucesso!');
-      navigate('/dashboard');
+    const { error } = await signUp(email, password, name, role);
+
+    if (error) {
+      if (error.message.includes('User already registered')) {
+        toast.error('Este email já está cadastrado');
+      } else {
+        toast.error('Erro ao criar conta. Tente novamente.');
+      }
       setIsLoading(false);
-    }, 500);
+      return;
+    }
+
+    toast.success('Conta criada com sucesso!');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
