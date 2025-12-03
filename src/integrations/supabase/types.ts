@@ -14,16 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      concepts: {
+        Row: {
+          created_at: string
+          description: string | null
+          generated_by: Database["public"]["Enums"]["concept_generated_by"]
+          id: string
+          matrix_id: string
+          name: string
+          selections: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          generated_by?: Database["public"]["Enums"]["concept_generated_by"]
+          id?: string
+          matrix_id: string
+          name: string
+          selections?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          generated_by?: Database["public"]["Enums"]["concept_generated_by"]
+          id?: string
+          matrix_id?: string
+          name?: string
+          selections?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concepts_matrix_id_fkey"
+            columns: ["matrix_id"]
+            isOneToOne: false
+            referencedRelation: "matrices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      functions: {
+        Row: {
+          category: Database["public"]["Enums"]["function_category"]
+          color: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["function_category"]
+          color?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["function_category"]
+          color?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      matrices: {
+        Row: {
+          created_at: string
+          description: string | null
+          function_ids: string[] | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          function_ids?: string[] | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          function_ids?: string[] | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      principles: {
+        Row: {
+          complexity: number
+          cost: Database["public"]["Enums"]["cost_level"]
+          created_at: string
+          created_by: string
+          description: string
+          function_id: string
+          id: string
+          image_url: string | null
+          is_public: boolean
+          tags: string[] | null
+          title: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          complexity?: number
+          cost?: Database["public"]["Enums"]["cost_level"]
+          created_at?: string
+          created_by: string
+          description: string
+          function_id: string
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          complexity?: number
+          cost?: Database["public"]["Enums"]["cost_level"]
+          created_at?: string
+          created_by?: string
+          description?: string
+          function_id?: string
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "principles_function_id_fkey"
+            columns: ["function_id"]
+            isOneToOne: false
+            referencedRelation: "functions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "student"
+      concept_generated_by: "manual" | "ia"
+      cost_level: "Baixo" | "Médio" | "Alto"
+      function_category:
+        | "Mecânica"
+        | "Elétrica"
+        | "Térmica"
+        | "Hidráulica"
+        | "Química"
+        | "Outra"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +369,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "student"],
+      concept_generated_by: ["manual", "ia"],
+      cost_level: ["Baixo", "Médio", "Alto"],
+      function_category: [
+        "Mecânica",
+        "Elétrica",
+        "Térmica",
+        "Hidráulica",
+        "Química",
+        "Outra",
+      ],
+    },
   },
 } as const
