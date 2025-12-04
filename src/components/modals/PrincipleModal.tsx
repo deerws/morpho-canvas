@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, X, Star } from 'lucide-react';
+import { Upload, X, Star, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples, Principle } from '@/hooks/usePrinciples';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -22,12 +23,15 @@ interface PrincipleModalProps {
 export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFunctionId }: PrincipleModalProps) {
   const { functions } = useFunctions();
   const { addPrinciple, updatePrinciple, isAdding, isUpdating } = usePrinciples();
+  const { uploadImage, deleteImage, isUploading } = useImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [functionId, setFunctionId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [complexity, setComplexity] = useState(3);
@@ -39,29 +43,40 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
       setDescription(editingPrinciple.description);
       setFunctionId(editingPrinciple.functionId);
       setImageUrl(editingPrinciple.imageUrl || '');
+      setPreviewUrl(editingPrinciple.imageUrl || '');
       setTags(editingPrinciple.tags);
       setComplexity(editingPrinciple.complexity);
       setCost(editingPrinciple.cost);
+      setPendingFile(null);
     } else {
       setTitle('');
       setDescription('');
       setFunctionId(defaultFunctionId || '');
       setImageUrl('');
+      setPreviewUrl('');
       setTags([]);
       setComplexity(3);
       setCost('Médio');
+      setPendingFile(null);
     }
   }, [editingPrinciple, defaultFunctionId, open]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPendingFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageUrl(reader.result as string);
+        setPreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setPendingFile(null);
+    setPreviewUrl('');
+    setImageUrl('');
   };
 
   const handleAddTag = () => {
@@ -75,7 +90,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
     setTags(tags.filter(t => t !== tag));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error('O título do princípio é obrigatório');
@@ -90,13 +105,33 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
       return;
     }
 
+    let finalImageUrl = imageUrl;
+
+    // Upload new image if there's a pending file
+    if (pendingFile) {
+      const uploadedUrl = await uploadImage(pendingFile);
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+        // Delete old image if editing
+        if (editingPrinciple?.imageUrl && editingPrinciple.imageUrl !== finalImageUrl) {
+          await deleteImage(editingPrinciple.imageUrl);
+        }
+      } else {
+        return; // Upload failed, don't proceed
+      }
+    } else if (!previewUrl && editingPrinciple?.imageUrl) {
+      // Image was removed
+      await deleteImage(editingPrinciple.imageUrl);
+      finalImageUrl = '';
+    }
+
     if (editingPrinciple) {
       updatePrinciple({ 
         id: editingPrinciple.id, 
         title, 
         description, 
         functionId, 
-        imageUrl: imageUrl || null, 
+        imageUrl: finalImageUrl || null, 
         tags, 
         complexity, 
         cost 
@@ -106,7 +141,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
         title,
         description,
         functionId,
-        imageUrl: imageUrl || null,
+        imageUrl: finalImageUrl || null,
         tags,
         complexity,
         cost,
@@ -116,7 +151,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
     onOpenChange(false);
   };
 
-  const isLoading = isAdding || isUpdating;
+  const isLoading = isAdding || isUpdating || isUploading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -169,28 +204,33 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
             <div
               className={cn(
                 "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-accent/50 transition-colors",
-                imageUrl ? "border-primary" : "border-border"
+                previewUrl ? "border-primary" : "border-border"
               )}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isUploading && fileInputRef.current?.click()}
             >
-              {imageUrl ? (
+              {previewUrl ? (
                 <div className="relative">
-                  <img src={imageUrl} alt="Preview" className="max-h-40 mx-auto rounded" />
+                  <img src={previewUrl} alt="Preview" className="max-h-40 mx-auto rounded" />
                   <Button
                     type="button"
                     variant="destructive"
                     size="icon"
                     className="absolute top-0 right-0 h-6 w-6"
-                    onClick={(e) => { e.stopPropagation(); setImageUrl(''); }}
+                    onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
+                    disabled={isUploading}
                   >
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
               ) : (
                 <div className="py-4">
-                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  {isUploading ? (
+                    <Loader2 className="w-8 h-8 mx-auto text-muted-foreground mb-2 animate-spin" />
+                  ) : (
+                    <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    Clique ou arraste uma imagem
+                    {isUploading ? 'Enviando...' : 'Clique ou arraste uma imagem'}
                   </p>
                 </div>
               )}
@@ -200,7 +240,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleImageUpload}
+              onChange={handleImageSelect}
             />
             <p className="text-xs text-muted-foreground">
               Caso não envie imagem, será exibido o título na matriz
