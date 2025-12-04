@@ -1,1 +1,4 @@
 project_id = "hslrjtfrlucwygsrjfwp"
+
+[functions.generate-concepts]
+verify_jwt = false

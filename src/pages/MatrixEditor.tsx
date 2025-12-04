@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Loader2 } from 'lucide-react';
+import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,11 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useMatrices, useMatrix } from '@/hooks/useMatrices';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
+import { useConcepts } from '@/hooks/useConcepts';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
+import { AIConceptGeneratorModal } from '@/components/modals/AIConceptGeneratorModal';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +25,7 @@ export default function MatrixEditor() {
   const { data: existingMatrix, isLoading: loadingMatrix } = useMatrix(id === 'new' ? undefined : id);
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
+  const { addConcept } = useConcepts(id === 'new' ? undefined : id);
   
   const isNew = id === 'new';
 
@@ -35,6 +38,7 @@ export default function MatrixEditor() {
   const [principleModalOpen, setPrincipleModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [conceptModalOpen, setConceptModalOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [searchFunctionId, setSearchFunctionId] = useState<string>('');
 
   useEffect(() => {
@@ -174,6 +178,14 @@ export default function MatrixEditor() {
               {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" />
               Salvar Matriz
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setAiModalOpen(true)}
+              disabled={Object.keys(conceptSelections).length === 0}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Gerar com IA
             </Button>
             <Button 
               onClick={() => setConceptModalOpen(true)}
@@ -503,6 +515,26 @@ export default function MatrixEditor() {
         selections={conceptSelections}
         onSaved={() => {
           setConceptSelections({});
+        }}
+      />
+
+      <AIConceptGeneratorModal
+        open={aiModalOpen}
+        onOpenChange={setAiModalOpen}
+        functions={selectedFunctions}
+        principles={principles}
+        selections={conceptSelections}
+        onSaveConcept={(concept) => {
+          if (matrixId || id) {
+            addConcept({
+              name: concept.name,
+              description: concept.description,
+              matrixId: matrixId || id || '',
+              selections: conceptSelections,
+              generatedBy: concept.generatedBy
+            });
+            setConceptSelections({});
+          }
         }}
       />
     </DashboardLayout>
