@@ -140,8 +140,11 @@ export default function Concepts() {
                     <div className="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
                       <Lightbulb className="w-6 h-6 text-warning" />
                     </div>
-                    <Badge variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}>
-                      {concept.generatedBy === 'ia' ? 'IA' : 'Manual'}
+                    <Badge 
+                      variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}
+                      className={concept.generatedBy === 'ia' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0' : ''}
+                    >
+                      {concept.generatedBy === 'ia' ? '✨ IA' : '✏️ Manual'}
                     </Badge>
                   </div>
                 </CardHeader>

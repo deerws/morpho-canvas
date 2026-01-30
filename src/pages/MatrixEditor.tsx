@@ -524,13 +524,15 @@ export default function MatrixEditor() {
         functions={selectedFunctions}
         principles={principles}
         selections={conceptSelections}
+        matrixId={matrixId || (id !== 'new' ? id : null) || null}
         onSaveConcept={(concept) => {
-          if (matrixId || id) {
+          const currentMatrixId = matrixId || (id !== 'new' ? id : null);
+          if (currentMatrixId) {
             addConcept({
               name: concept.name,
               description: concept.description,
-              matrixId: matrixId || id || '',
-              selections: conceptSelections,
+              matrixId: currentMatrixId,
+              selections: concept.selections,
               generatedBy: concept.generatedBy
             });
             setConceptSelections({});

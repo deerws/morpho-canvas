@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Sparkles, Loader2, ThumbsUp, ThumbsDown, Save, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Dialog,
@@ -36,7 +37,8 @@ interface AIConceptGeneratorModalProps {
   functions: Function[];
   principles: Principle[];
   selections: Record<string, string>;
-  onSaveConcept: (concept: { name: string; description: string; generatedBy: 'ia' }) => void;
+  onSaveConcept: (concept: { name: string; description: string; selections: Record<string, string>; generatedBy: 'ia' }) => void;
+  matrixId: string | null;
 }
 
 export function AIConceptGeneratorModal({
@@ -45,7 +47,8 @@ export function AIConceptGeneratorModal({
   functions,
   principles,
   selections,
-  onSaveConcept
+  onSaveConcept,
+  matrixId
 }: AIConceptGeneratorModalProps) {
   const [numConcepts, setNumConcepts] = useState(3);
   const [temperature, setTemperature] = useState(0.7);
@@ -53,7 +56,7 @@ export function AIConceptGeneratorModal({
   const [expandedConcept, setExpandedConcept] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
 
-  const { isGenerating, generatedConcepts, error, generateConcepts, clearConcepts } = useAIConceptGeneration();
+  const { isGenerating, generatedConcepts, error, fromCache, generateConcepts, clearConcepts } = useAIConceptGeneration();
 
   const selectedPrinciplesCount = Object.keys(selections).length;
 
@@ -75,9 +78,14 @@ export function AIConceptGeneratorModal({
   };
 
   const handleSaveConcept = (concept: GeneratedConcept) => {
+    if (!matrixId) {
+      toast.error('Salve a matriz antes de salvar conceitos');
+      return;
+    }
     onSaveConcept({
       name: concept.name,
       description: `${concept.description}\n\n**Raciocínio:** ${concept.reasoning}\n\n**Vantagens:** ${concept.advantages.join(', ')}\n\n**Desafios:** ${concept.challenges.join(', ')}`,
+      selections,
       generatedBy: 'ia'
     });
   };
@@ -118,6 +126,7 @@ export function AIConceptGeneratorModal({
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Analisando {functions.length} funções × {selectedPrinciplesCount} princípios selecionados
+            {!matrixId && <span className="text-amber-500 ml-2">• Salve a matriz para poder salvar conceitos</span>}
           </p>
         </DialogHeader>
 
@@ -233,7 +242,18 @@ export function AIConceptGeneratorModal({
                   </CardContent>
                 </Card>
               ) : generatedConcepts.length > 0 ? (
-                <div className="space-y-4 pr-4">
+                <>
+                  {fromCache && (
+                    <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-lg bg-muted border">
+                      <Badge variant="outline" className="text-xs">
+                        📦 Cache
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Conceitos recuperados do cache. Altere as configurações para gerar novos.
+                      </span>
+                    </div>
+                  )}
+                  <div className="space-y-4 pr-4">
                   {generatedConcepts.map((concept) => {
                     const isExpanded = expandedConcept === concept.id;
                     const costInfo = getCostLabel(concept.costEstimate);
@@ -342,6 +362,8 @@ export function AIConceptGeneratorModal({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleSaveConcept(concept)}
+                                disabled={!matrixId}
+                                title={!matrixId ? 'Salve a matriz primeiro' : 'Salvar conceito'}
                               >
                                 <Save className="w-4 h-4 mr-2" />
                                 Salvar
@@ -352,7 +374,8 @@ export function AIConceptGeneratorModal({
                       </Card>
                     );
                   })}
-                </div>
+                  </div>
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <Sparkles className="w-12 h-12 text-muted-foreground/50 mb-4" />

@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_concept_cache: {
+        Row: {
+          concepts: Json
+          created_at: string
+          expires_at: string
+          id: string
+          options: Json
+          selections: Json
+          selections_hash: string
+          user_id: string
+        }
+        Insert: {
+          concepts?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          options?: Json
+          selections?: Json
+          selections_hash: string
+          user_id: string
+        }
+        Update: {
+          concepts?: Json
+          created_at?: string
+          expires_at?: string
+          id?: string
+          options?: Json
+          selections?: Json
+          selections_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       concepts: {
         Row: {
           created_at: string
