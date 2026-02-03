@@ -1,6 +1,6 @@
 # MorphoDesign Platform (Morpho Canvas)
 
-Uma plataforma web educativa para estudantes e professores de design de produto criarem, gerenciarem e analisarem **matrizes morfológicas**. O sistema moderniza fluxos de trabalho legados com uma interface interativa focada em usabilidade acadêmica.
+An educational web platform for product design students and professors to create, manage, and analyze **morphological matrices**. The system modernizes legacy workflows with an interactive interface focused on academic usability.
 
 ![React](https://img.shields.io/badge/React-18.3-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
@@ -8,125 +8,125 @@ Uma plataforma web educativa para estudantes e professores de design de produto 
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-teal)
 ![Supabase](https://img.shields.io/badge/Supabase-Backend-green)
 
-## 📋 Índice
+## 📋 Table of Contents
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Funcionalidades](#-funcionalidades)
-- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [Arquitetura](#-arquitetura)
-- [Instalação](#-instalação)
-- [Estrutura de Pastas](#-estrutura-de-pastas)
-- [Banco de Dados](#-banco-de-dados)
-- [Geração de Conceitos com IA](#-geração-de-conceitos-com-ia)
-- [Contribuição](#-contribuição)
+- [About the Project](#-about-the-project)
+- [Features](#-features)
+- [Technologies Used](#-technologies-used)
+- [Architecture](#-architecture)
+- [Installation](#-installation)
+- [Folder Structure](#-folder-structure)
+- [Database](#-database)
+- [AI Concept Generation](#-ai-concept-generation)
+- [Contributing](#-contributing)
 
-## 🎯 Sobre o Projeto
+## 🎯 About the Project
 
-### O que é Matriz Morfológica?
+### What is a Morphological Matrix?
 
-A **matriz morfológica** é uma técnica de criatividade e resolução de problemas desenvolvida por Fritz Zwicky. Ela permite explorar sistematicamente todas as combinações possíveis de soluções para um problema de design, organizando:
+A **morphological matrix** is a creativity and problem-solving technique developed by Fritz Zwicky. It allows for systematically exploring all possible solution combinations for a design problem by organizing:
 
-- **Funções**: Os problemas ou requisitos que precisam ser resolvidos
-- **Princípios de Solução**: As diferentes formas de resolver cada função
+- **Functions**: The problems or requirements that need to be solved
+- **Solution Principles**: The different ways to solve each function
 
-### Objetivo da Plataforma
+### Platform Objective
 
-O MorphoDesign Platform foi desenvolvido para:
+MorphoDesign Platform was developed to:
 
-1. **Digitalizar** o processo de criação de matrizes morfológicas
-2. **Facilitar** a colaboração entre estudantes e professores
-3. **Automatizar** a geração de conceitos usando Inteligência Artificial
-4. **Organizar** bancos de funções e princípios reutilizáveis
-5. **Avaliar** conceitos com métricas de custo, complexidade e viabilidade
+1. **Digitize** the morphological matrix creation process
+2. **Facilitate** collaboration between students and professors
+3. **Automate** concept generation using Artificial Intelligence
+4. **Organize** reusable function and principle databases
+5. **Evaluate** concepts with cost, complexity, and feasibility metrics
 
-## ✨ Funcionalidades
+## ✨ Features
 
-### 🔐 Autenticação
-- Login e registro com email
-- Sistema de roles (admin, teacher, student)
-- Perfis de usuário personalizáveis
+### 🔐 Authentication
+- Email-based login and registration
+- Role system (admin, teacher, student)
+- Customizable user profiles
 
 ### 📊 Dashboard
-- Visão geral das matrizes criadas
-- Acesso rápido a conceitos salvos
-- Estatísticas de uso
+- Overview of created matrices
+- Quick access to saved concepts
+- Usage statistics
 
-### 🗂️ Banco de Funções
-- Catálogo de funções organizadas por categoria:
-  - Mecânica
-  - Elétrica
-  - Térmica
-  - Hidráulica
-  - Química
-  - Outra
-- Funções públicas (sistema) e privadas (usuário)
-- Busca e filtros avançados
+### 🗂️ Function Bank
+- Catalog of functions organized by category:
+  - Mechanical
+  - Electrical
+  - Thermal
+  - Hydraulic
+  - Chemical
+  - Other
+- Public (system) and private (user) functions
+- Advanced search and filters
 
-### 🧩 Princípios de Solução
-- Princípios vinculados a cada função
-- Imagens ilustrativas
-- Métricas de complexidade e custo
-- Tags para organização
-- Sistema de busca inteligente
+### 🧩 Solution Principles
+- Principles linked to each function
+- Illustrative images
+- Complexity and cost metrics
+- Tags for organization
+- Intelligent search system
 
-### 📐 Matrizes Morfológicas
-- Criação visual de matrizes
-- Seleção de funções e princípios
-- Organização drag-and-drop
-- Exportação de dados
+### 📐 Morphological Matrices
+- Visual matrix creation
+- Function and principle selection
+- Drag-and-drop organization
+- Data export
 
-### 🤖 Geração de Conceitos com IA
-- Integração com Google Gemini 1.5 Flash
-- Parâmetros configuráveis:
-  - Nível de criatividade
-  - Foco (inovação, viabilidade, custo)
-  - Número de conceitos
-- Sistema de cache para otimização
-- Pontuação e justificativa detalhada
-- Coleta de feedback do usuário
+### 🤖 AI Concept Generation
+- Integration with Google Gemini 1.5 Flash
+- Configurable parameters:
+  - Creativity level
+  - Focus (innovation, feasibility, cost)
+  - Number of concepts
+- Cache system for optimization
+- Detailed scoring and justification
+- User feedback collection
 
-### 💾 Conceitos
-- Salvamento de combinações geradas
-- Marcação manual ou por IA
-- Histórico de conceitos por matriz
+### 💾 Concepts
+- Save generated combinations
+- Manual or AI tagging
+- Concept history per matrix
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Technologies Used
 
 ### Frontend
 
-| Tecnologia | Versão | Descrição |
-|------------|--------|-----------|
-| **React** | 18.3 | Biblioteca para construção de interfaces |
-| **TypeScript** | 5.x | Superset tipado de JavaScript |
-| **Vite** | 5.x | Build tool e dev server rápido |
-| **Tailwind CSS** | 3.4 | Framework CSS utility-first |
-| **shadcn/ui** | - | Componentes de UI acessíveis |
-| **React Router** | 6.x | Roteamento client-side |
-| **React Query** | 5.x | Gerenciamento de estado do servidor |
-| **Zustand** | 5.x | Gerenciamento de estado global |
-| **React Hook Form** | 7.x | Formulários performáticos |
-| **Zod** | 3.x | Validação de schemas |
-| **Lucide React** | - | Biblioteca de ícones |
-| **Recharts** | 2.x | Gráficos e visualizações |
-| **Sonner** | 1.x | Notificações toast |
+| Technology | Version | Description |
+|------------|---------|-------------|
+| **React** | 18.3 | UI library |
+| **TypeScript** | 5.x | Typed JavaScript superset |
+| **Vite** | 5.x | Fast build tool and dev server |
+| **Tailwind CSS** | 3.4 | Utility-first CSS framework |
+| **shadcn/ui** | - | Accessible UI components |
+| **React Router** | 6.x | Client-side routing |
+| **React Query** | 5.x | Server state management |
+| **Zustand** | 5.x | Global state management |
+| **React Hook Form** | 7.x | Performant forms |
+| **Zod** | 3.x | Schema validation |
+| **Lucide React** | - | Icon library |
+| **Recharts** | 2.x | Charts and visualizations |
+| **Sonner** | 1.x | Toast notifications |
 
 ### Backend (Supabase/Lovable Cloud)
 
-| Tecnologia | Descrição |
-|------------|-----------|
-| **PostgreSQL** | Banco de dados relacional |
-| **Supabase Auth** | Autenticação e autorização |
-| **Supabase Storage** | Armazenamento de arquivos |
-| **Edge Functions** | Funções serverless (Deno) |
-| **Row Level Security** | Segurança a nível de linha |
+| Technology | Description |
+|------------|-------------|
+| **PostgreSQL** | Relational database |
+| **Supabase Auth** | Authentication and authorization |
+| **Supabase Storage** | File storage |
+| **Edge Functions** | Serverless functions (Deno) |
+| **Row Level Security** | Row-level security |
 
-### Inteligência Artificial
+### Artificial Intelligence
 
-| Tecnologia | Descrição |
-|------------|-----------|
-| **Google Gemini 1.5 Flash** | Modelo de linguagem para geração de conceitos |
+| Technology | Description |
+|------------|-------------|
+| **Google Gemini 1.5 Flash** | Language model for concept generation |
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -157,126 +157,126 @@ O MorphoDesign Platform foi desenvolvido para:
                                            └─────────────────┘
 ```
 
-## 🚀 Instalação
+## 🚀 Installation
 
-### Pré-requisitos
+### Prerequisites
 
 - **Node.js** 18+ 
-- **npm** ou **bun**
-- Conta no [Lovable](https://lovable.dev) (para backend)
+- **npm** or **bun**
+- [Lovable](https://lovable.dev) account (for backend)
 
-### Instalação Local
+### Local Installation
 
-1. **Clone o repositório**
+1. **Clone the repository**
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone <REPOSITORY_URL>
 cd morpho-canvas
 ```
 
-2. **Instale as dependências**
+2. **Install dependencies**
 ```bash
 npm install
-# ou
+# or
 bun install
 ```
 
-3. **Configure as variáveis de ambiente**
+3. **Configure environment variables**
 
-O projeto usa Lovable Cloud, que configura automaticamente as variáveis:
+The project uses Lovable Cloud, which automatically configures:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 - `VITE_SUPABASE_PROJECT_ID`
 
-Para a geração de conceitos com IA, configure:
-- `GOOGLE_GENERATIVE_AI_API_KEY` (nas secrets do projeto)
+For AI concept generation, configure:
+- `GOOGLE_GENERATIVE_AI_API_KEY` (in project secrets)
 
-4. **Inicie o servidor de desenvolvimento**
+4. **Start development server**
 ```bash
 npm run dev
-# ou
+# or
 bun run dev
 ```
 
-5. **Acesse a aplicação**
+5. **Access the application**
 ```
 http://localhost:5173
 ```
 
-### Usando o Lovable
+### Using Lovable
 
-A forma mais simples de usar o projeto é através do Lovable:
+The simplest way to use the project is through Lovable:
 
-1. Acesse o [Projeto no Lovable](https://lovable.dev/projects/c0dfbbfd-34e1-493c-ad1d-9189babcf066)
-2. Use o chat para fazer alterações
-3. Visualize as mudanças em tempo real
+1. Access the [Project on Lovable](https://lovable.dev/projects/c0dfbbfd-34e1-493c-ad1d-9189babcf066)
+2. Use chat to make changes
+3. View changes in real-time
 
-## 📁 Estrutura de Pastas
+## 📁 Folder Structure
 
 ```
 morpho-canvas/
-├── public/                    # Arquivos estáticos
+├── public/                    # Static files
 │   ├── favicon.ico
 │   ├── placeholder.svg
 │   └── robots.txt
 ├── src/
-│   ├── components/            # Componentes React
-│   │   ├── layout/           # Componentes de layout
+│   ├── components/            # React components
+│   │   ├── layout/           # Layout components
 │   │   │   ├── AppSidebar.tsx
 │   │   │   └── DashboardLayout.tsx
-│   │   ├── modals/           # Modais da aplicação
+│   │   ├── modals/           # Application modals
 │   │   │   ├── AIConceptGeneratorModal.tsx
 │   │   │   ├── ConceptSaveModal.tsx
 │   │   │   ├── FunctionModal.tsx
 │   │   │   ├── PrincipleModal.tsx
 │   │   │   └── PrincipleSearchModal.tsx
-│   │   └── ui/               # Componentes shadcn/ui
+│   │   └── ui/               # shadcn/ui components
 │   ├── hooks/                # Custom hooks
-│   │   ├── useAuth.tsx       # Autenticação
-│   │   ├── useConcepts.ts    # CRUD de conceitos
-│   │   ├── useFunctions.ts   # CRUD de funções
-│   │   ├── useMatrices.ts    # CRUD de matrizes
-│   │   ├── usePrinciples.ts  # CRUD de princípios
-│   │   ├── useImageUpload.ts # Upload de imagens
+│   │   ├── useAuth.tsx       # Authentication
+│   │   ├── useConcepts.ts    # Concepts CRUD
+│   │   ├── useFunctions.ts   # Functions CRUD
+│   │   ├── useMatrices.ts    # Matrices CRUD
+│   │   ├── usePrinciples.ts  # Principles CRUD
+│   │   ├── useImageUpload.ts # Image upload
 │   │   └── useAIConceptGeneration.ts
-│   ├── integrations/         # Integrações externas
+│   ├── integrations/         # External integrations
 │   │   └── supabase/
-│   │       ├── client.ts     # Cliente Supabase
-│   │       └── types.ts      # Tipos do banco
-│   ├── pages/                # Páginas da aplicação
+│   │       ├── client.ts     # Supabase client
+│   │       └── types.ts      # Database types
+│   ├── pages/                # Application pages
 │   │   ├── Index.tsx         # Landing page
-│   │   ├── Login.tsx         # Página de login
-│   │   ├── Register.tsx      # Página de registro
-│   │   ├── Dashboard.tsx     # Dashboard principal
-│   │   ├── Matrices.tsx      # Lista de matrizes
-│   │   ├── MatrixEditor.tsx  # Editor de matriz
-│   │   ├── Concepts.tsx      # Conceitos salvos
-│   │   ├── FunctionsBank.tsx # Banco de funções
-│   │   ├── Settings.tsx      # Configurações
-│   │   └── NotFound.tsx      # Página 404
-│   ├── store/                # Estado global (Zustand)
+│   │   ├── Login.tsx         # Login page
+│   │   ├── Register.tsx      # Registration page
+│   │   ├── Dashboard.tsx     # Main dashboard
+│   │   ├── Matrices.tsx      # Matrix list
+│   │   ├── MatrixEditor.tsx  # Matrix editor
+│   │   ├── Concepts.tsx      # Saved concepts
+│   │   ├── FunctionsBank.tsx # Function bank
+│   │   ├── Settings.tsx      # Settings
+│   │   └── NotFound.tsx      # 404 page
+│   ├── store/                # Global state (Zustand)
 │   │   └── morphoStore.ts
-│   ├── types/                # Definições de tipos
+│   ├── types/                # Type definitions
 │   │   └── morpho.ts
-│   ├── lib/                  # Utilitários
+│   ├── lib/                  # Utilities
 │   │   └── utils.ts
-│   ├── App.tsx               # Componente raiz
+│   ├── App.tsx               # Root component
 │   ├── main.tsx              # Entry point
-│   └── index.css             # Estilos globais e design tokens
+│   └── index.css             # Global styles and design tokens
 ├── supabase/
-│   ├── config.toml           # Configuração Supabase
+│   ├── config.toml           # Supabase configuration
 │   ├── functions/            # Edge Functions
 │   │   └── generate-concepts/
-│   │       └── index.ts      # Geração de conceitos IA
-│   └── migrations/           # Migrações do banco
-├── tailwind.config.ts        # Configuração Tailwind
-├── vite.config.ts            # Configuração Vite
-├── tsconfig.json             # Configuração TypeScript
-└── package.json              # Dependências
+│   │       └── index.ts      # AI concept generation
+│   └── migrations/           # Database migrations
+├── tailwind.config.ts        # Tailwind configuration
+├── vite.config.ts            # Vite configuration
+├── tsconfig.json             # TypeScript configuration
+└── package.json              # Dependencies
 ```
 
-## 🗄️ Banco de Dados
+## 🗄️ Database
 
-### Diagrama ER
+### ER Diagram
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -325,62 +325,62 @@ morpho-canvas/
 
 ### Enums
 
-| Enum | Valores |
-|------|---------|
+| Enum | Values |
+|------|--------|
 | `app_role` | admin, teacher, student |
-| `function_category` | Mecânica, Elétrica, Térmica, Hidráulica, Química, Outra |
-| `cost_level` | Baixo, Médio, Alto |
-| `concept_generated_by` | manual, ia |
+| `function_category` | Mechanical, Electrical, Thermal, Hydraulic, Chemical, Other |
+| `cost_level` | Low, Medium, High |
+| `concept_generated_by` | manual, ai |
 
 ### Row Level Security (RLS)
 
-Todas as tabelas possuem políticas RLS para:
-- Usuários podem ver dados públicos (`is_public = true`)
-- Usuários podem ver/editar seus próprios dados
-- Administradores têm acesso completo
+All tables have RLS policies for:
+- Users can view public data (`is_public = true`)
+- Users can view/edit their own data
+- Administrators have full access
 
-## 🤖 Geração de Conceitos com IA
+## 🤖 AI Concept Generation
 
-### Como Funciona
+### How It Works
 
-1. **Entrada**: O usuário seleciona princípios na matriz morfológica
-2. **Configuração**: Define parâmetros (criatividade, foco, quantidade)
-3. **Processamento**: Edge Function envia para Google Gemini
-4. **Cache**: Resultados são cacheados por hash das seleções
-5. **Saída**: Conceitos com nome, descrição, pontuação e justificativa
+1. **Input**: User selects principles in the morphological matrix
+2. **Configuration**: Define parameters (creativity, focus, quantity)
+3. **Processing**: Edge Function sends to Google Gemini
+4. **Cache**: Results are cached by selection hash
+5. **Output**: Concepts with name, description, score, and justification
 
-### Parâmetros
+### Parameters
 
-| Parâmetro | Descrição | Valores |
-|-----------|-----------|---------|
-| Criatividade | Nível de inovação das respostas | 0.1 - 1.0 |
-| Foco | Prioridade da geração | Inovação, Viabilidade, Custo |
-| Quantidade | Número de conceitos | 1 - 10 |
+| Parameter | Description | Values |
+|-----------|-------------|--------|
+| Creativity | Innovation level of responses | 0.1 - 1.0 |
+| Focus | Generation priority | Innovation, Feasibility, Cost |
+| Quantity | Number of concepts | 1 - 10 |
 
-### Sistema de Cache
+### Cache System
 
-Para otimizar custos e performance, um sistema de cache baseado no hash das seleções e configurações evita chamadas redundantes à API do Gemini.
+To optimize costs and performance, a cache system based on selection and configuration hashes prevents redundant calls to the Gemini API.
 
 ```typescript
-// Hash gerado a partir de:
+// Hash generated from:
 {
   selections: { functionId: principleId },
   options: { creativity, focus, count }
 }
 ```
 
-## 🤝 Contribuição
+## 🤝 Contributing
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
 
-## 📄 Licença
+## 📄 License
 
-Este projeto foi desenvolvido para fins educacionais.
+This project was developed for educational purposes.
 
 ---
 
-**Desenvolvido com ❤️ usando [Lovable](https://lovable.dev)**
+**Developed with ❤️ using [Lovable](https://lovable.dev)**
