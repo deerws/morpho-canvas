@@ -202,14 +202,6 @@ bun run dev
 http://localhost:5173
 ```
 
-### Using Lovable
-
-The simplest way to use the project is through Lovable:
-
-1. Access the [Project on Lovable](https://lovable.dev/projects/c0dfbbfd-34e1-493c-ad1d-9189babcf066)
-2. Use chat to make changes
-3. View changes in real-time
-
 ## 📁 Folder Structure
 
 ```
@@ -380,7 +372,3 @@ To optimize costs and performance, a cache system based on selection and configu
 ## 📄 License
 
 This project was developed for educational purposes.
-
----
-
-**Developed with ❤️ using [Lovable](https://lovable.dev)**
