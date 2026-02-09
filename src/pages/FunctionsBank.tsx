@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useFunctions, ProductFunction } from '@/hooks/useFunctions';
 import { usePrinciples, Principle } from '@/hooks/usePrinciples';
+import { useAuth } from '@/hooks/useAuth';
 import { FunctionModal } from '@/components/modals/FunctionModal';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import {
@@ -23,6 +24,7 @@ import {
 
 export default function FunctionsBank() {
   const { functions, deleteFunction, isLoading: loadingFunctions } = useFunctions();
+  const { user } = useAuth();
   const { principles, deletePrinciple, isLoading: loadingPrinciples } = usePrinciples();
   const [searchFunction, setSearchFunction] = useState('');
   const [searchPrinciple, setSearchPrinciple] = useState('');
@@ -148,12 +150,19 @@ export default function FunctionsBank() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEditFunction(func)}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => confirmDelete('function', func.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        {func.createdBy === user?.id && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => handleEditFunction(func)}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => confirmDelete('function', func.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                        {func.createdBy !== user?.id && (
+                          <Badge variant="outline" className="text-xs">Público</Badge>
+                        )}
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
                     </CardContent>
@@ -222,14 +231,16 @@ export default function FunctionsBank() {
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
                         <CardTitle className="text-base">{principle.title}</CardTitle>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditPrinciple(principle)}>
-                            <Edit2 className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => confirmDelete('principle', principle.id)}>
-                            <Trash2 className="w-3 h-3 text-destructive" />
-                          </Button>
-                        </div>
+                        {principle.createdBy === user?.id && (
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditPrinciple(principle)}>
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => confirmDelete('principle', principle.id)}>
+                              <Trash2 className="w-3 h-3 text-destructive" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       <Badge
                         variant="outline"
