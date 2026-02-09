@@ -126,6 +126,103 @@ MorphoDesign Platform was developed to:
 |------------|-------------|
 | **Google Gemini 1.5 Flash** | Language model for concept generation |
 
+## 🔄 User Flows
+
+### Creating a Morphological Matrix
+
+```mermaid
+flowchart TD
+    A[Login] --> B[Dashboard]
+    B --> C[Click 'New Matrix']
+    C --> D[Enter name and description]
+    D --> E[Save Matrix]
+    E --> F[Matrix Editor]
+    F --> G{Add Functions}
+    G -->|From Bank| H[Select existing functions]
+    G -->|New| I[Create custom function]
+    H --> J[Functions added to matrix]
+    I --> J
+    J --> K{Add Principles}
+    K -->|From Bank| L[Search and select principles]
+    K -->|New| M[Create custom principle]
+    L --> N[Principles appear in grid]
+    M --> N
+    N --> O[Select one principle per function]
+    O --> P{Generate Concepts?}
+    P -->|Manual| Q[Save concept manually]
+    P -->|AI| R[Open AI Generator]
+    Q --> S[Concept saved]
+    R --> S
+```
+
+### AI Concept Generation Flow
+
+```mermaid
+flowchart TD
+    A[Open AI Generator Modal] --> B[Configure Parameters]
+    B --> B1[Set creativity level 0.1-1.0]
+    B --> B2[Choose focus: Innovation / Feasibility / Cost]
+    B --> B3[Set number of concepts 1-5]
+    B1 & B2 & B3 --> C[Click 'Generate Concepts']
+    C --> D{Check Cache}
+    D -->|Cache Hit| E[Return cached concepts]
+    D -->|Cache Miss| F[Send to Edge Function]
+    F --> G[Edge Function calls Google Gemini API]
+    G --> H[Parse AI response]
+    H --> I[Save to cache]
+    I --> J[Display generated concepts]
+    E --> J
+    J --> K[Review concepts]
+    K --> L{User Action}
+    L -->|👍 Like| M[Positive feedback]
+    L -->|👎 Dislike| N[Negative feedback]
+    L -->|💾 Save| O[Save concept to matrix]
+    L -->|🔄 Regenerate| C
+```
+
+### User Registration and Authentication
+
+```mermaid
+flowchart TD
+    A[Access Platform] --> B{Has Account?}
+    B -->|No| C[Register Page]
+    C --> D[Enter name, email, password]
+    D --> E[Submit registration]
+    E --> F[Verify email]
+    F --> G[Login Page]
+    B -->|Yes| G
+    G --> H[Enter email and password]
+    H --> I{Credentials valid?}
+    I -->|No| J[Show error message]
+    J --> G
+    I -->|Yes| K[Redirect to Dashboard]
+    K --> L[Access all features]
+```
+
+### Function and Principle Management
+
+```mermaid
+flowchart TD
+    A[Function Bank Page] --> B{Action}
+    B -->|View| C[Browse functions by category]
+    C --> D[Expand to see principles]
+    B -->|Create| E[Open Function Modal]
+    E --> F[Enter name, category, color]
+    F --> G[Save Function]
+    G --> H[Function created]
+    H --> I{Add Principles?}
+    I -->|Yes| J[Open Principle Modal]
+    J --> K[Enter title, description, image]
+    K --> L[Set complexity & cost]
+    L --> M[Add tags]
+    M --> N[Save Principle]
+    N --> O[Principle linked to function]
+    I -->|No| P[Done]
+    B -->|Search| Q[Use search and filters]
+    Q --> R[Filter by category, tags, cost]
+    R --> S[View filtered results]
+```
+
 ## 🏗️ Architecture
 
 ```
