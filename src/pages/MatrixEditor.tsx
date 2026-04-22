@@ -182,7 +182,8 @@ export default function MatrixEditor() {
             <Button 
               variant="outline"
               onClick={() => setAiModalOpen(true)}
-              disabled={Object.keys(conceptSelections).length === 0}
+              disabled={selectedFunctions.length === 0}
+              title={selectedFunctions.length === 0 ? 'Adicione funções à matriz' : 'Gerar conceitos com IA'}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Gerar com IA
