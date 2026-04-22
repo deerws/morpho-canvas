@@ -63,8 +63,11 @@ export function AIConceptGeneratorModal({
   const [focus, setFocus] = useState<'innovation' | 'feasibility' | 'cost'>('innovation');
   const [expandedConcept, setExpandedConcept] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
+  const [imageStyle, setImageStyle] = useState<ImageStyle>('render3d');
+  const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
 
   const { isGenerating, generatedConcepts, error, fromCache, generateConcepts, clearConcepts } = useAIConceptGeneration();
+  const { generateImage, isLoading: isImageLoading, getImage } = useConceptImage();
 
   const selectedPrinciplesCount = Object.keys(selections).length;
 
