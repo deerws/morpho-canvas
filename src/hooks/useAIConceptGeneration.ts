@@ -82,11 +82,12 @@ export function useAIConceptGeneration() {
   const saveCacheEntry = async (
     selections: Record<string, string>,
     concepts: GeneratedConcept[],
-    options: GenerateOptions
+    options: GenerateOptions,
+    functionIds: string[]
   ) => {
     if (!user) return;
 
-    const hash = generateSelectionsHash(selections);
+    const hash = generateSelectionsHash(selections, functionIds);
 
     // Using any type assertion to avoid Supabase Json type issues
     const insertData = {
