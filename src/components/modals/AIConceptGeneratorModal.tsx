@@ -136,7 +136,7 @@ export function AIConceptGeneratorModal({
             Gerador de Conceitos com IA
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Analisando {functions.length} funções × {selectedPrinciplesCount} princípios selecionados
+            Analisando {functions.length} funções × {selectedPrinciplesCount > 0 ? `${selectedPrinciplesCount} princípios selecionados` : 'sem princípios (a IA proporá os princípios)'}
             {!matrixId && <span className="text-amber-500 ml-2">• Salve a matriz para poder salvar conceitos</span>}
           </p>
         </DialogHeader>
