@@ -147,7 +147,7 @@ export function useAIConceptGeneration() {
       setGeneratedConcepts(data.concepts);
       
       // Save to cache
-      await saveCacheEntry(selections, data.concepts, options);
+      await saveCacheEntry(selections, data.concepts, options, functionIds);
       
       toast.success(`${data.concepts.length} conceito(s) gerado(s) com sucesso!`);
       return data.concepts;
