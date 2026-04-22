@@ -36,9 +36,10 @@ interface GenerateOptions {
   focus: 'innovation' | 'feasibility' | 'cost';
 }
 
-function generateSelectionsHash(selections: Record<string, string>): string {
+function generateSelectionsHash(selections: Record<string, string>, functionIds: string[] = []): string {
   const sortedEntries = Object.entries(selections).sort((a, b) => a[0].localeCompare(b[0]));
-  return btoa(JSON.stringify(sortedEntries));
+  const sortedFuncs = [...functionIds].sort();
+  return btoa(JSON.stringify({ s: sortedEntries, f: sortedFuncs }));
 }
 
 export function useAIConceptGeneration() {
