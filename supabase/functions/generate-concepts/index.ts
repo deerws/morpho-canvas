@@ -43,7 +43,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Build context about selected principles
+    // Build context about selected principles (may be empty)
     const selectedPrinciples = Object.entries(selections).map(([funcId, princId]) => {
       const func = functions.find(f => f.id === funcId);
       const principle = principles.find(p => p.id === princId);
@@ -53,6 +53,8 @@ serve(async (req) => {
         description: principle?.description || ''
       };
     });
+
+    const hasSelections = selectedPrinciples.length > 0;
 
     const focusPrompts = {
       innovation: 'Priorize ideias criativas, disruptivas e inovadoras que possam revolucionar o mercado.',
