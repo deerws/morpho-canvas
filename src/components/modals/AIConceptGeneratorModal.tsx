@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, ThumbsUp, ThumbsDown, Save, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Loader2, ThumbsUp, ThumbsDown, Save, RefreshCw, X, ChevronDown, ChevronUp, Image as ImageIcon, ZoomIn, Download } from 'lucide-react';
+import { useConceptImage, ImageStyle } from '@/hooks/useConceptImage';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -55,8 +63,11 @@ export function AIConceptGeneratorModal({
   const [focus, setFocus] = useState<'innovation' | 'feasibility' | 'cost'>('innovation');
   const [expandedConcept, setExpandedConcept] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, 'up' | 'down'>>({});
+  const [imageStyle, setImageStyle] = useState<ImageStyle>('render3d');
+  const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
 
   const { isGenerating, generatedConcepts, error, fromCache, generateConcepts, clearConcepts } = useAIConceptGeneration();
+  const { generateImage, isLoading: isImageLoading, getImage } = useConceptImage();
 
   const selectedPrinciplesCount = Object.keys(selections).length;
 
@@ -182,6 +193,28 @@ export function AIConceptGeneratorModal({
                       <Label htmlFor="cost" className="text-sm font-normal">Custo</Label>
                     </div>
                   </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Estilo da imagem</Label>
+                  <Select
+                    value={imageStyle}
+                    onValueChange={(v) => setImageStyle(v as ImageStyle)}
+                    disabled={isGenerating}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="render3d">Render 3D</SelectItem>
+                      <SelectItem value="realistic">Foto realista</SelectItem>
+                      <SelectItem value="sketch">Sketch técnico</SelectItem>
+                      <SelectItem value="blueprint">Blueprint</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Aplicado ao gerar imagem em cada conceito
+                  </p>
                 </div>
 
                 <Button
@@ -340,6 +373,54 @@ export function AIConceptGeneratorModal({
                             </div>
                           )}
 
+                          {/* Generated image with shadow box */}
+                          {(() => {
+                            const img = getImage(concept.id);
+                            const loading = isImageLoading(concept.id);
+                            if (!img && !loading) return null;
+                            return (
+                              <div className="mt-4 pt-4 border-t">
+                                {loading ? (
+                                  <div className="flex items-center justify-center h-48 rounded-lg bg-muted/40 border border-dashed">
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                      <Loader2 className="w-6 h-6 animate-spin" />
+                                      <span className="text-xs">Gerando imagem...</span>
+                                    </div>
+                                  </div>
+                                ) : img ? (
+                                  <div className="relative group">
+                                    <div
+                                      className="rounded-xl overflow-hidden bg-muted/30 cursor-zoom-in transition-transform hover:scale-[1.01]"
+                                      style={{
+                                        boxShadow: '0 20px 40px -12px hsl(var(--primary) / 0.25), 0 8px 16px -8px hsl(var(--foreground) / 0.15)',
+                                      }}
+                                      onClick={() => setZoomImage({ url: img, name: concept.name })}
+                                    >
+                                      <img
+                                        src={img}
+                                        alt={concept.name}
+                                        className="w-full h-auto object-contain max-h-80"
+                                      />
+                                    </div>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                      <Button
+                                        size="icon"
+                                        variant="secondary"
+                                        className="h-8 w-8 shadow-md"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setZoomImage({ url: img, name: concept.name });
+                                        }}
+                                      >
+                                        <ZoomIn className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
+                            );
+                          })()}
+
                           <div className="flex items-center justify-between mt-4 pt-3 border-t">
                             <div className="flex items-center gap-2">
                               <Button
@@ -358,6 +439,20 @@ export function AIConceptGeneratorModal({
                               </Button>
                             </div>
                             <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => generateImage(concept.id, concept.name, concept.description, imageStyle)}
+                                disabled={isImageLoading(concept.id)}
+                                title="Gerar imagem do conceito (consome créditos de IA)"
+                              >
+                                {isImageLoading(concept.id) ? (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                  <ImageIcon className="w-4 h-4 mr-2" />
+                                )}
+                                {getImage(concept.id) ? 'Regenerar Imagem' : 'Gerar Imagem'}
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -391,6 +486,34 @@ export function AIConceptGeneratorModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Zoom Dialog */}
+      <Dialog open={!!zoomImage} onOpenChange={(o) => !o && setZoomImage(null)}>
+        <DialogContent className="max-w-5xl p-2 bg-background">
+          <DialogHeader className="px-4 pt-3 pb-2">
+            <DialogTitle className="flex items-center justify-between gap-2 pr-8">
+              <span className="truncate">{zoomImage?.name}</span>
+              {zoomImage && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={zoomImage.url} download={`${zoomImage.name}.png`}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar
+                  </a>
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {zoomImage && (
+            <div className="overflow-auto max-h-[80vh] rounded-lg bg-muted/30 flex items-center justify-center p-2">
+              <img
+                src={zoomImage.url}
+                alt={zoomImage.name}
+                className="max-w-full h-auto"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
