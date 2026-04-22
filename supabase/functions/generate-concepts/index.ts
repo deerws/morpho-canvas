@@ -77,18 +77,20 @@ Para cada conceito gerado, forneça:
 
 Responda SEMPRE em formato JSON válido.`;
 
+    const principlesSection = hasSelections
+      ? `PRINCÍPIOS SELECIONADOS:\n${selectedPrinciples.map(s => `- ${s.function}: ${s.principle}\n  Descrição: ${s.description}`).join('\n\n')}`
+      : `NENHUM PRINCÍPIO DE SOLUÇÃO FOI SELECIONADO.\nVocê deve PROPOR livremente princípios de solução adequados para cada função listada acima e, a partir deles, gerar os conceitos. Seja criativo na escolha dos princípios e justifique no campo "reasoning" quais princípios você imaginou para cada função.`;
+
     const userPrompt = `Analise a seguinte configuração da Matriz Morfológica e gere ${options.numConcepts} conceito(s) de produto:
 
 FUNÇÕES DO PRODUTO:
 ${functions.map(f => `- ${f.name} (${f.category})`).join('\n')}
 
-PRINCÍPIOS SELECIONADOS:
-${selectedPrinciples.map(s => `- ${s.function}: ${s.principle}
-  Descrição: ${s.description}`).join('\n\n')}
+${principlesSection}
 
 FOCO DA GERAÇÃO: ${focusPrompts[options.focus]}
 
-Gere ${options.numConcepts} conceito(s) inovador(es) que integre(m) esses princípios de forma sinérgica.
+Gere ${options.numConcepts} conceito(s) inovador(es) que ${hasSelections ? 'integre(m) esses princípios' : 'cubra(m) todas as funções listadas'} de forma sinérgica.
 
 Responda no seguinte formato JSON:
 {
