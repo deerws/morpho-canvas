@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, ThumbsUp, ThumbsDown, Save, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Loader2, ThumbsUp, ThumbsDown, Save, RefreshCw, X, ChevronDown, ChevronUp, Image as ImageIcon, ZoomIn, Download } from 'lucide-react';
+import { useConceptImage, ImageStyle } from '@/hooks/useConceptImage';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
