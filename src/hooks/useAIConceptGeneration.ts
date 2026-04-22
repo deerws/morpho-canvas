@@ -118,7 +118,8 @@ export function useAIConceptGeneration() {
 
     try {
       // Check cache first
-      const cached = await getCachedConcepts(selections, options);
+      const functionIds = functions.map(f => f.id);
+      const cached = await getCachedConcepts(selections, options, functionIds);
       if (cached && cached.length > 0) {
         setGeneratedConcepts(cached);
         setFromCache(true);
