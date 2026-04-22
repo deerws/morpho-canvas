@@ -40,28 +40,30 @@ serve(async (req) => {
 
     const styleHint = styleHints[style] || styleHints.render3d;
 
-    const prompt = `Industrial design product visualization of: ${conceptName}.
+    const prompt = `Generate an image. Industrial design product visualization of: ${conceptName}.
 
 Description: ${conceptDescription}
 
-Style: ${styleHint}. The image should clearly show the product concept as a single hero subject, centered, with no text or labels visible. Focus on form, materials, and key functional features described.`;
+Style: ${styleHint}. The image must clearly show the product concept as a single hero subject, centered, with no text or labels visible. Focus on form, materials, and key functional features described. Return ONLY the image, no text explanation.`;
 
     console.log('Generating image for concept:', conceptName);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [
-          { role: "user", content: prompt }
-        ],
-        modalities: ["image", "text"],
-      }),
-    });
+    const callImageModel = async (model: string) => {
+      return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+    };
+
+    let response = await callImageModel("google/gemini-2.5-flash-image");
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -88,12 +90,27 @@ Style: ${styleHint}. The image should clearly show the product concept as a sing
       });
     }
 
-    const aiData = await response.json();
-    const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    let aiData = await response.json();
+    let imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    // Retry once with a stronger model if no image was returned
+    if (!imageUrl) {
+      console.log("First attempt returned no image, retrying with pro model...");
+      const retry = await callImageModel("google/gemini-3-pro-image-preview");
+      if (retry.ok) {
+        aiData = await retry.json();
+        imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      }
+    }
 
     if (!imageUrl) {
       console.error("No image in AI response:", JSON.stringify(aiData).slice(0, 500));
-      throw new Error("A IA não retornou nenhuma imagem");
+      return new Response(JSON.stringify({
+        error: "A IA não conseguiu gerar uma imagem desta vez. Tente novamente em alguns segundos ou use outro estilo."
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log('Image generated successfully');
