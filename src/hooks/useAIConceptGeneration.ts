@@ -36,9 +36,10 @@ interface GenerateOptions {
   focus: 'innovation' | 'feasibility' | 'cost';
 }
 
-function generateSelectionsHash(selections: Record<string, string>): string {
+function generateSelectionsHash(selections: Record<string, string>, functionIds: string[] = []): string {
   const sortedEntries = Object.entries(selections).sort((a, b) => a[0].localeCompare(b[0]));
-  return btoa(JSON.stringify(sortedEntries));
+  const sortedFuncs = [...functionIds].sort();
+  return btoa(JSON.stringify({ s: sortedEntries, f: sortedFuncs }));
 }
 
 export function useAIConceptGeneration() {
@@ -50,11 +51,12 @@ export function useAIConceptGeneration() {
 
   const getCachedConcepts = async (
     selections: Record<string, string>,
-    options: GenerateOptions
+    options: GenerateOptions,
+    functionIds: string[]
   ): Promise<GeneratedConcept[] | null> => {
     if (!user) return null;
 
-    const hash = generateSelectionsHash(selections);
+    const hash = generateSelectionsHash(selections, functionIds);
 
     const { data, error } = await supabase
       .from('ai_concept_cache')
@@ -80,11 +82,12 @@ export function useAIConceptGeneration() {
   const saveCacheEntry = async (
     selections: Record<string, string>,
     concepts: GeneratedConcept[],
-    options: GenerateOptions
+    options: GenerateOptions,
+    functionIds: string[]
   ) => {
     if (!user) return;
 
-    const hash = generateSelectionsHash(selections);
+    const hash = generateSelectionsHash(selections, functionIds);
 
     // Using any type assertion to avoid Supabase Json type issues
     const insertData = {
@@ -115,7 +118,8 @@ export function useAIConceptGeneration() {
 
     try {
       // Check cache first
-      const cached = await getCachedConcepts(selections, options);
+      const functionIds = functions.map(f => f.id);
+      const cached = await getCachedConcepts(selections, options, functionIds);
       if (cached && cached.length > 0) {
         setGeneratedConcepts(cached);
         setFromCache(true);
@@ -143,7 +147,7 @@ export function useAIConceptGeneration() {
       setGeneratedConcepts(data.concepts);
       
       // Save to cache
-      await saveCacheEntry(selections, data.concepts, options);
+      await saveCacheEntry(selections, data.concepts, options, functionIds);
       
       toast.success(`${data.concepts.length} conceito(s) gerado(s) com sucesso!`);
       return data.concepts;

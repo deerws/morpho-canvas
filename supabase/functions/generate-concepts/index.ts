@@ -43,7 +43,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Build context about selected principles
+    // Build context about selected principles (may be empty)
     const selectedPrinciples = Object.entries(selections).map(([funcId, princId]) => {
       const func = functions.find(f => f.id === funcId);
       const principle = principles.find(p => p.id === princId);
@@ -53,6 +53,8 @@ serve(async (req) => {
         description: principle?.description || ''
       };
     });
+
+    const hasSelections = selectedPrinciples.length > 0;
 
     const focusPrompts = {
       innovation: 'Priorize ideias criativas, disruptivas e inovadoras que possam revolucionar o mercado.',
@@ -75,18 +77,20 @@ Para cada conceito gerado, forneça:
 
 Responda SEMPRE em formato JSON válido.`;
 
+    const principlesSection = hasSelections
+      ? `PRINCÍPIOS SELECIONADOS:\n${selectedPrinciples.map(s => `- ${s.function}: ${s.principle}\n  Descrição: ${s.description}`).join('\n\n')}`
+      : `NENHUM PRINCÍPIO DE SOLUÇÃO FOI SELECIONADO.\nVocê deve PROPOR livremente princípios de solução adequados para cada função listada acima e, a partir deles, gerar os conceitos. Seja criativo na escolha dos princípios e justifique no campo "reasoning" quais princípios você imaginou para cada função.`;
+
     const userPrompt = `Analise a seguinte configuração da Matriz Morfológica e gere ${options.numConcepts} conceito(s) de produto:
 
 FUNÇÕES DO PRODUTO:
 ${functions.map(f => `- ${f.name} (${f.category})`).join('\n')}
 
-PRINCÍPIOS SELECIONADOS:
-${selectedPrinciples.map(s => `- ${s.function}: ${s.principle}
-  Descrição: ${s.description}`).join('\n\n')}
+${principlesSection}
 
 FOCO DA GERAÇÃO: ${focusPrompts[options.focus]}
 
-Gere ${options.numConcepts} conceito(s) inovador(es) que integre(m) esses princípios de forma sinérgica.
+Gere ${options.numConcepts} conceito(s) inovador(es) que ${hasSelections ? 'integre(m) esses princípios' : 'cubra(m) todas as funções listadas'} de forma sinérgica.
 
 Responda no seguinte formato JSON:
 {

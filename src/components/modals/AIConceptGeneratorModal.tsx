@@ -136,7 +136,7 @@ export function AIConceptGeneratorModal({
             Gerador de Conceitos com IA
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Analisando {functions.length} funções × {selectedPrinciplesCount} princípios selecionados
+            Analisando {functions.length} funções × {selectedPrinciplesCount > 0 ? `${selectedPrinciplesCount} princípios selecionados` : 'sem princípios (a IA proporá os princípios)'}
             {!matrixId && <span className="text-amber-500 ml-2">• Salve a matriz para poder salvar conceitos</span>}
           </p>
         </DialogHeader>
@@ -219,7 +219,7 @@ export function AIConceptGeneratorModal({
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={isGenerating || selectedPrinciplesCount === 0}
+                  disabled={isGenerating || functions.length === 0}
                   className="w-full"
                 >
                   {isGenerating ? (
@@ -235,11 +235,15 @@ export function AIConceptGeneratorModal({
                   )}
                 </Button>
 
-                {selectedPrinciplesCount === 0 && (
+                {functions.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center">
-                    Selecione princípios na matriz para gerar conceitos
+                    Adicione funções à matriz para gerar conceitos
                   </p>
-                )}
+                ) : selectedPrinciplesCount === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Sem princípios selecionados — a IA proporá princípios para cada função
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
           </div>
