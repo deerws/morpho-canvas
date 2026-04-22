@@ -486,6 +486,34 @@ export function AIConceptGeneratorModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Zoom Dialog */}
+      <Dialog open={!!zoomImage} onOpenChange={(o) => !o && setZoomImage(null)}>
+        <DialogContent className="max-w-5xl p-2 bg-background">
+          <DialogHeader className="px-4 pt-3 pb-2">
+            <DialogTitle className="flex items-center justify-between gap-2 pr-8">
+              <span className="truncate">{zoomImage?.name}</span>
+              {zoomImage && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={zoomImage.url} download={`${zoomImage.name}.png`}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar
+                  </a>
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {zoomImage && (
+            <div className="overflow-auto max-h-[80vh] rounded-lg bg-muted/30 flex items-center justify-center p-2">
+              <img
+                src={zoomImage.url}
+                alt={zoomImage.name}
+                className="max-w-full h-auto"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
