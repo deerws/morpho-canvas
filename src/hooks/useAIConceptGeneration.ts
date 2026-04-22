@@ -51,11 +51,12 @@ export function useAIConceptGeneration() {
 
   const getCachedConcepts = async (
     selections: Record<string, string>,
-    options: GenerateOptions
+    options: GenerateOptions,
+    functionIds: string[]
   ): Promise<GeneratedConcept[] | null> => {
     if (!user) return null;
 
-    const hash = generateSelectionsHash(selections);
+    const hash = generateSelectionsHash(selections, functionIds);
 
     const { data, error } = await supabase
       .from('ai_concept_cache')
