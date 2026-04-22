@@ -90,12 +90,27 @@ Style: ${styleHint}. The image must clearly show the product concept as a single
       });
     }
 
-    const aiData = await response.json();
-    const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    let aiData = await response.json();
+    let imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    // Retry once with a stronger model if no image was returned
+    if (!imageUrl) {
+      console.log("First attempt returned no image, retrying with pro model...");
+      const retry = await callImageModel("google/gemini-3-pro-image-preview");
+      if (retry.ok) {
+        aiData = await retry.json();
+        imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      }
+    }
 
     if (!imageUrl) {
       console.error("No image in AI response:", JSON.stringify(aiData).slice(0, 500));
-      throw new Error("A IA não retornou nenhuma imagem");
+      return new Response(JSON.stringify({
+        error: "A IA não conseguiu gerar uma imagem desta vez. Tente novamente em alguns segundos ou use outro estilo."
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log('Image generated successfully');
