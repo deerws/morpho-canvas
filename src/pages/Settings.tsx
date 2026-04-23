@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { User, Mail, Shield, Palette, Loader2, Lock } from 'lucide-react';
+import { User, Mail, Shield, Palette, Loader2, Lock, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [name, setName] = useState(user?.user_metadata?.name || '');
   const [isLoading, setIsLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -205,10 +208,27 @@ export default function Settings() {
               Personalize a interface
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Em breve: modo escuro e personalização de temas
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div className="flex items-center gap-3">
+                {theme === 'dark' ? (
+                  <Moon className="w-5 h-5 text-foreground" />
+                ) : (
+                  <Sun className="w-5 h-5 text-foreground" />
+                )}
+                <div>
+                  <p className="font-medium text-foreground">Modo escuro</p>
+                  <p className="text-sm text-muted-foreground">
+                    {theme === 'dark' ? 'Tema escuro ativado' : 'Tema claro ativado'}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+                aria-label="Alternar modo escuro"
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
