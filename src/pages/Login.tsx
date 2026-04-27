@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -30,6 +31,15 @@ export default function Login() {
       navigate(from, { replace: true });
     }
   }, [user, loading, navigate, from]);
+
+  // Bootstrap idempotente do usuário admin master na primeira visita
+  useEffect(() => {
+    const key = 'morpho.adminBootstrapped';
+    if (sessionStorage.getItem(key)) return;
+    supabase.functions.invoke('bootstrap-admin').then(({ data }) => {
+      if (data?.ok) sessionStorage.setItem(key, '1');
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

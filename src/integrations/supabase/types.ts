@@ -47,6 +47,68 @@ export type Database = {
         }
         Relationships: []
       }
+      class_enrollments: {
+        Row: {
+          class_id: string
+          enrolled_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          enrolled_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          enrolled_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          name: string
+          semester: string
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          semester: string
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          semester?: string
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       concepts: {
         Row: {
           created_at: string
@@ -56,6 +118,7 @@ export type Database = {
           matrix_id: string
           name: string
           selections: Json
+          selections_snapshot: Json
         }
         Insert: {
           created_at?: string
@@ -65,6 +128,7 @@ export type Database = {
           matrix_id: string
           name: string
           selections?: Json
+          selections_snapshot?: Json
         }
         Update: {
           created_at?: string
@@ -74,6 +138,7 @@ export type Database = {
           matrix_id?: string
           name?: string
           selections?: Json
+          selections_snapshot?: Json
         }
         Relationships: [
           {
@@ -234,6 +299,44 @@ export type Database = {
         }
         Relationships: []
       }
+      student_invitations: {
+        Row: {
+          accepted_at: string | null
+          class_id: string
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          class_id: string
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          class_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_invitations_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -257,6 +360,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      close_class: { Args: { _class_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -264,9 +368,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_teacher_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      promote_to_teacher: { Args: { _user_id: string }; Returns: undefined }
+      reopen_class: { Args: { _class_id: string }; Returns: undefined }
+      set_student_role: {
+        Args: {
+          _new_role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student"
+      app_role: "admin" | "teacher" | "student" | "viewer"
       concept_generated_by: "manual" | "ia"
       cost_level: "Baixo" | "Médio" | "Alto"
       function_category:
@@ -403,7 +517,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "student"],
+      app_role: ["admin", "teacher", "student", "viewer"],
       concept_generated_by: ["manual", "ia"],
       cost_level: ["Baixo", "Médio", "Alto"],
       function_category: [

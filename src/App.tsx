@@ -14,6 +14,7 @@ import MatrixEditor from "./pages/MatrixEditor";
 import FunctionsBank from "./pages/FunctionsBank";
 import Concepts from "./pages/Concepts";
 import Settings from "./pages/Settings";
+import Management from "./pages/Management";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/functions-bank" element={<ProtectedRoute><FunctionsBank /></ProtectedRoute>} />
             <Route path="/concepts" element={<ProtectedRoute><Concepts /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/management" element={<ProtectedRoute><Management /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

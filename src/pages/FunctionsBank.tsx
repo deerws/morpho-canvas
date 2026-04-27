@@ -26,7 +26,7 @@ import {
 export default function FunctionsBank() {
   const { functions, deleteFunction, isLoading: loadingFunctions } = useFunctions();
   const { user } = useAuth();
-  const { isTeacher } = useUserRole();
+  const { isTeacher, isViewer } = useUserRole();
   const { principles, deletePrinciple, isLoading: loadingPrinciples } = usePrinciples();
   const [searchFunction, setSearchFunction] = useState('');
   const [searchPrinciple, setSearchPrinciple] = useState('');
@@ -113,10 +113,12 @@ export default function FunctionsBank() {
                   className="pl-10"
                 />
               </div>
-              <Button onClick={() => { setEditingFunction(undefined); setFunctionModalOpen(true); }}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Função
-              </Button>
+              {!isViewer && (
+                <Button onClick={() => { setEditingFunction(undefined); setFunctionModalOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Função
+                </Button>
+              )}
             </div>
 
             <div className="grid gap-4">
@@ -195,10 +197,12 @@ export default function FunctionsBank() {
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
               </select>
-              <Button onClick={() => { setEditingPrinciple(undefined); setPrincipleModalOpen(true); }}>
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Princípio
-              </Button>
+              {!isViewer && (
+                <Button onClick={() => { setEditingPrinciple(undefined); setPrincipleModalOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Princípio
+                </Button>
+              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
