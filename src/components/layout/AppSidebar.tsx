@@ -1,37 +1,37 @@
-import { Home, Table2, List, Lightbulb, Settings, LogOut } from 'lucide-react';
+import { Home, Table2, List, Lightbulb, Settings, LogOut, Users } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  SidebarHeader,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarHeader,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-
-const menuItems = [
-  { title: 'Início', url: '/dashboard', icon: Home },
-  { title: 'Minhas Matrizes', url: '/matrices', icon: Table2 },
-  { title: 'Banco de Funções', url: '/functions-bank', icon: List },
-  { title: 'Conceitos Gerados', url: '/concepts', icon: Lightbulb },
-  { title: 'Configurações', url: '/settings', icon: Settings },
-];
+import { Badge } from '@/components/ui/badge';
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
+  const { isTeacher, isAdmin, isViewer, role } = useUserRole();
   const navigate = useNavigate();
+
+  const menuItems = [
+    { title: 'Início', url: '/dashboard', icon: Home },
+    { title: 'Minhas Matrizes', url: '/matrices', icon: Table2 },
+    { title: 'Banco de Funções', url: '/functions-bank', icon: List },
+    { title: 'Conceitos Gerados', url: '/concepts', icon: Lightbulb },
+    ...(isTeacher ? [{ title: 'Gestão', url: '/management', icon: Users }] : []),
+    { title: 'Configurações', url: '/settings', icon: Settings },
+  ];
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
+
+  const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Professor' : isViewer ? 'Espectador' : 'Aluno';
+  const roleVariant: 'default' | 'secondary' | 'outline' = isViewer ? 'secondary' : isTeacher ? 'default' : 'outline';
 
   return (
     <Sidebar className="border-r border-border">
@@ -57,12 +57,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
-                          isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                        )
+                        cn('flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
+                          isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground')
                       }
                     >
                       <item.icon className="w-5 h-5" />
@@ -85,7 +81,7 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{user?.user_metadata?.name || user?.email || 'Usuário'}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.user_metadata?.role || 'Aluno'}</p>
+            <Badge variant={roleVariant} className="text-[10px] h-4 px-1.5 mt-0.5">{roleLabel}</Badge>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="w-4 h-4" />
