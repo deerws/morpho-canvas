@@ -27,9 +27,12 @@ export function useUserRole() {
 
   return {
     role,
-    isTeacher: role === 'teacher' || role === 'admin',
     isAdmin: role === 'admin',
+    isTeacher: role === 'teacher' || role === 'admin',
     isStudent: role === 'student',
+    isViewer: role === 'viewer',
+    isReadOnly: role === 'viewer',
+    canCreate: role !== 'viewer',
     isLoading: query.isLoading,
   };
 }
