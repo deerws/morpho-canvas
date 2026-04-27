@@ -2,3 +2,9 @@ project_id = "hslrjtfrlucwygsrjfwp"
 
 [functions.generate-concepts]
 verify_jwt = false
+
+[functions.validate-invitation]
+verify_jwt = false
+
+[functions.bootstrap-admin]
+verify_jwt = false
