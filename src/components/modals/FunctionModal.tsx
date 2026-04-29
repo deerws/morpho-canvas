@@ -136,7 +136,7 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               {editingFunction ? 'Salvar' : 'Criar Função'}
             </Button>
           </DialogFooter>
