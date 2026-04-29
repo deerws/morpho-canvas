@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2 } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
 import { useMatrices } from '@/hooks/useMatrices';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +36,8 @@ export default function Concepts() {
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, isLoading: loadingPrinciples } = usePrinciples();
   const { matrices, isLoading: loadingMatrices } = useMatrices();
+  const { user } = useAuth();
+  const { isReadOnly, isTeacher } = useUserRole();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewConcept, setViewConcept] = useState<string | null>(null);
