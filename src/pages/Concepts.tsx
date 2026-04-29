@@ -103,7 +103,9 @@ export default function Concepts() {
 
   return (
     <DashboardLayout>
+      <TooltipProvider>
       <div className="space-y-6">
+        {isReadOnly && <ReadOnlyBanner />}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Conceitos Gerados</h1>
           <p className="text-muted-foreground mt-1">
