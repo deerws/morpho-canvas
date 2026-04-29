@@ -28,8 +28,10 @@ export default function MatrixEditor() {
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
   const { addConcept } = useConcepts(id === 'new' ? undefined : id);
-  
+  const { isReadOnly } = useUserRole();
+
   const isNew = id === 'new';
+  const canEdit = !isReadOnly;
 
   const [matrixName, setMatrixName] = useState('');
   const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>([]);
