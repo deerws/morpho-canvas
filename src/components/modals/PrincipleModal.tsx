@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples, Principle } from '@/hooks/usePrinciples';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
