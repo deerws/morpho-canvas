@@ -46,6 +46,10 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!name.trim()) {
       toast.error('O nome da função é obrigatório');
       return;
