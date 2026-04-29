@@ -119,7 +119,7 @@ export function ConceptSaveModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isAdding}>
+            <Button type="submit" disabled={isAdding || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               Salvar Conceito
             </Button>
           </DialogFooter>
