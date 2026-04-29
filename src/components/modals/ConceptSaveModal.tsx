@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
 interface ConceptSaveModalProps {
