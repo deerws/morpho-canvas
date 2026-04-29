@@ -50,7 +50,9 @@ export default function Matrices() {
 
   return (
     <DashboardLayout>
+      <TooltipProvider>
       <div className="space-y-6">
+        {isReadOnly && <ReadOnlyBanner />}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Minhas Matrizes</h1>
@@ -58,12 +60,14 @@ export default function Matrices() {
               Gerencie suas matrizes morfológicas
             </p>
           </div>
-          <Button asChild>
-            <Link to="/matrix/new">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Matriz
-            </Link>
-          </Button>
+          {canCreate && (
+            <Button asChild>
+              <Link to="/matrix/new">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Matriz
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div className="relative max-w-sm">
