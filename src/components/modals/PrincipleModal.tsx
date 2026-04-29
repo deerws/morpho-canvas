@@ -25,6 +25,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const { functions } = useFunctions();
   const { addPrinciple, updatePrinciple, isAdding, isUpdating } = usePrinciples();
   const { uploadImage, deleteImage, isUploading } = useImageUpload();
+  const { isReadOnly } = useUserRole();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
