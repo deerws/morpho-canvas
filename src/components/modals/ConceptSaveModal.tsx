@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
 interface ConceptSaveModalProps {
@@ -28,11 +29,16 @@ export function ConceptSaveModal({
   const { addConcept, isAdding } = useConcepts();
   const { functions } = useFunctions();
   const { principles } = usePrinciples();
+  const { isReadOnly } = useUserRole();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!name.trim()) {
       toast.error('Digite um nome para o conceito');
       return;
@@ -113,7 +119,7 @@ export function ConceptSaveModal({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isAdding}>
+            <Button type="submit" disabled={isAdding || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               Salvar Conceito
             </Button>
           </DialogFooter>

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples, Principle } from '@/hooks/usePrinciples';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const { functions } = useFunctions();
   const { addPrinciple, updatePrinciple, isAdding, isUpdating } = usePrinciples();
   const { uploadImage, deleteImage, isUploading } = useImageUpload();
+  const { isReadOnly } = useUserRole();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
@@ -92,6 +94,10 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!title.trim()) {
       toast.error('O título do princípio é obrigatório');
       return;
@@ -312,7 +318,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               {editingPrinciple ? 'Salvar' : 'Criar Princípio'}
             </Button>
           </DialogFooter>

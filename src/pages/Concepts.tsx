@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2 } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
 import { useMatrices } from '@/hooks/useMatrices';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +36,8 @@ export default function Concepts() {
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, isLoading: loadingPrinciples } = usePrinciples();
   const { matrices, isLoading: loadingMatrices } = useMatrices();
+  const { user } = useAuth();
+  const { isReadOnly, isTeacher } = useUserRole();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewConcept, setViewConcept] = useState<string | null>(null);
@@ -97,7 +103,9 @@ export default function Concepts() {
 
   return (
     <DashboardLayout>
+      <TooltipProvider>
       <div className="space-y-6">
+        {isReadOnly && <ReadOnlyBanner />}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Conceitos Gerados</h1>
           <p className="text-muted-foreground mt-1">
@@ -133,19 +141,31 @@ export default function Concepts() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredConcepts.map((concept) => (
+            {filteredConcepts.map((concept) => {
+              const matrix = matrices.find(m => m.id === concept.matrixId);
+              const isOwner = matrix?.userId === user?.id;
+              const canDelete = isOwner ? !isReadOnly : isTeacher;
+              const showModerateBadge = isTeacher && !isOwner;
+              return (
               <Card key={concept.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
                       <Lightbulb className="w-6 h-6 text-warning" />
                     </div>
-                    <Badge 
-                      variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}
-                      className={concept.generatedBy === 'ia' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0' : ''}
-                    >
-                      {concept.generatedBy === 'ia' ? '✨ IA' : '✏️ Manual'}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {showModerateBadge && (
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <ShieldAlert className="w-3 h-3" /> Moderar
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}
+                        className={concept.generatedBy === 'ia' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0' : ''}
+                      >
+                        {concept.generatedBy === 'ia' ? '✨ IA' : '✏️ Manual'}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -197,17 +217,27 @@ export default function Concepts() {
                     >
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setDeleteId(concept.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    {canDelete && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteId(concept.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {showModerateBadge ? 'Remover como moderador' : 'Excluir conceito'}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -267,6 +297,7 @@ export default function Concepts() {
           )}
         </DialogContent>
       </Dialog>
+      </TooltipProvider>
     </DashboardLayout>
   );
 }

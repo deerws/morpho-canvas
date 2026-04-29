@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useMatrices, useMatrix } from '@/hooks/useMatrices';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
 import { useConcepts } from '@/hooks/useConcepts';
+import { useUserRole } from '@/hooks/useUserRole';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
@@ -26,8 +28,10 @@ export default function MatrixEditor() {
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
   const { addConcept } = useConcepts(id === 'new' ? undefined : id);
-  
+  const { isReadOnly } = useUserRole();
+
   const isNew = id === 'new';
+  const canEdit = !isReadOnly;
 
   const [matrixName, setMatrixName] = useState('');
   const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>([]);
@@ -164,6 +168,11 @@ export default function MatrixEditor() {
   return (
     <DashboardLayout>
       <div className="h-full flex flex-col">
+        {isReadOnly && (
+          <div className="mb-4">
+            <ReadOnlyBanner />
+          </div>
+        )}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <Input
@@ -171,30 +180,37 @@ export default function MatrixEditor() {
               onChange={(e) => setMatrixName(e.target.value)}
               placeholder="Nome da matriz..."
               className="text-xl font-bold w-80"
+              disabled={isReadOnly}
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleSaveMatrix} disabled={isAdding}>
-              {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Matriz
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setAiModalOpen(true)}
-              disabled={selectedFunctions.length === 0}
-              title={selectedFunctions.length === 0 ? 'Adicione funções à matriz' : 'Gerar conceitos com IA'}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Gerar com IA
-            </Button>
-            <Button 
-              onClick={() => setConceptModalOpen(true)}
-              disabled={Object.keys(conceptSelections).length === 0}
-            >
-              <Lightbulb className="w-4 h-4 mr-2" />
-              Gerar Conceito
-            </Button>
+            {canEdit && (
+              <Button variant="outline" onClick={handleSaveMatrix} disabled={isAdding}>
+                {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Matriz
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                variant="outline"
+                onClick={() => setAiModalOpen(true)}
+                disabled={selectedFunctions.length === 0}
+                title={selectedFunctions.length === 0 ? 'Adicione funções à matriz' : 'Gerar conceitos com IA'}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Gerar com IA
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                onClick={() => setConceptModalOpen(true)}
+                disabled={Object.keys(conceptSelections).length === 0}
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Gerar Conceito
+              </Button>
+            )}
           </div>
         </div>
 

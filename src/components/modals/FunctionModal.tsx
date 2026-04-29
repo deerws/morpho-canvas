@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFunctions, ProductFunction } from '@/hooks/useFunctions';
+import { useUserRole } from '@/hooks/useUserRole';
 import { CATEGORY_COLORS } from '@/types/morpho';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ const categories: ProductFunction['category'][] = ['Mecânica', 'Elétrica', 'T�
 
 export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionModalProps) {
   const { addFunction, updateFunction, isAdding, isUpdating } = useFunctions();
+  const { isReadOnly } = useUserRole();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<ProductFunction['category']>('Mecânica');
@@ -44,6 +46,10 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!name.trim()) {
       toast.error('O nome da função é obrigatório');
       return;
@@ -130,7 +136,7 @@ export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionM
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               {editingFunction ? 'Salvar' : 'Criar Função'}
             </Button>
           </DialogFooter>
