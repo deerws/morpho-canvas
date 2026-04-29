@@ -167,7 +167,8 @@ export default function Matrices() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -188,6 +189,7 @@ export default function Matrices() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </TooltipProvider>
     </DashboardLayout>
   );
 }
