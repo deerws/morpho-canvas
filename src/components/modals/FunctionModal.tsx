@@ -20,6 +20,7 @@ const categories: ProductFunction['category'][] = ['Mecânica', 'Elétrica', 'T�
 
 export function FunctionModal({ open, onOpenChange, editingFunction }: FunctionModalProps) {
   const { addFunction, updateFunction, isAdding, isUpdating } = useFunctions();
+  const { isReadOnly } = useUserRole();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<ProductFunction['category']>('Mecânica');
