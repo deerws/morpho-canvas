@@ -297,6 +297,7 @@ export default function Concepts() {
           )}
         </DialogContent>
       </Dialog>
+      </TooltipProvider>
     </DashboardLayout>
   );
 }
