@@ -94,6 +94,10 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!title.trim()) {
       toast.error('O título do princípio é obrigatório');
       return;
