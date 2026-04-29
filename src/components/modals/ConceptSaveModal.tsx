@@ -29,11 +29,16 @@ export function ConceptSaveModal({
   const { addConcept, isAdding } = useConcepts();
   const { functions } = useFunctions();
   const { principles } = usePrinciples();
+  const { isReadOnly } = useUserRole();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error('Modo somente leitura — semestre encerrado');
+      return;
+    }
     if (!name.trim()) {
       toast.error('Digite um nome para o conceito');
       return;
