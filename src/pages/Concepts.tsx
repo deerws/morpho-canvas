@@ -141,19 +141,31 @@ export default function Concepts() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredConcepts.map((concept) => (
+            {filteredConcepts.map((concept) => {
+              const matrix = matrices.find(m => m.id === concept.matrixId);
+              const isOwner = matrix?.userId === user?.id;
+              const canDelete = isOwner ? !isReadOnly : isTeacher;
+              const showModerateBadge = isTeacher && !isOwner;
+              return (
               <Card key={concept.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
                       <Lightbulb className="w-6 h-6 text-warning" />
                     </div>
-                    <Badge 
-                      variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}
-                      className={concept.generatedBy === 'ia' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0' : ''}
-                    >
-                      {concept.generatedBy === 'ia' ? '✨ IA' : '✏️ Manual'}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {showModerateBadge && (
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <ShieldAlert className="w-3 h-3" /> Moderar
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={concept.generatedBy === 'ia' ? 'default' : 'secondary'}
+                        className={concept.generatedBy === 'ia' ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0' : ''}
+                      >
+                        {concept.generatedBy === 'ia' ? '✨ IA' : '✏️ Manual'}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -205,17 +217,27 @@ export default function Concepts() {
                     >
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setDeleteId(concept.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    {canDelete && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteId(concept.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {showModerateBadge ? 'Remover como moderador' : 'Excluir conceito'}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
