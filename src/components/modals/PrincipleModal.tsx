@@ -318,7 +318,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isReadOnly} title={isReadOnly ? 'Modo somente leitura — semestre encerrado' : undefined}>
               {editingPrinciple ? 'Salvar' : 'Criar Princípio'}
             </Button>
           </DialogFooter>
