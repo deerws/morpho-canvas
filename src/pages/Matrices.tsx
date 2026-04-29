@@ -94,7 +94,7 @@ export default function Matrices() {
               <p className="text-muted-foreground mb-4">
                 {search ? 'Tente outra busca' : 'Comece criando sua primeira matriz morfológica'}
               </p>
-              {!search && (
+              {!search && canCreate && (
                 <Button asChild>
                   <Link to="/matrix/new">
                     <Plus className="w-4 h-4 mr-2" />
@@ -106,27 +106,48 @@ export default function Matrices() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMatrices.map((matrix) => (
+            {filteredMatrices.map((matrix) => {
+              const isOwner = matrix.userId === user?.id;
+              const canEdit = isOwner ? !isReadOnly : isTeacher;
+              const canDelete = canEdit;
+              const showModerateBadge = isTeacher && !isOwner;
+              return (
               <Card key={matrix.id} className="hover:shadow-md transition-shadow group">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Table2 className="w-6 h-6 text-primary" />
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link to={`/matrix/${matrix.id}`}>
-                          <Edit2 className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => setDeleteId(matrix.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity items-center">
+                      {showModerateBadge && (
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <ShieldAlert className="w-3 h-3" /> Moderar
+                        </Badge>
+                      )}
+                      {canEdit && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                          <Link to={`/matrix/${matrix.id}`}>
+                            <Edit2 className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setDeleteId(matrix.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {showModerateBadge ? 'Remover como moderador' : 'Excluir matriz'}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
