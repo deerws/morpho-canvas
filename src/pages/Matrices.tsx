@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Table2, Edit2, Trash2, Calendar, Loader2 } from 'lucide-react';
+import { Plus, Search, Table2, Edit2, Trash2, Calendar, Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useMatrices } from '@/hooks/useMatrices';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +24,8 @@ import {
 
 export default function Matrices() {
   const { matrices, deleteMatrix, isLoading } = useMatrices();
+  const { user } = useAuth();
+  const { isReadOnly, isTeacher, canCreate } = useUserRole();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
