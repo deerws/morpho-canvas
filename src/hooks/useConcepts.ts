@@ -35,7 +35,7 @@ const mapRowToConcept = (row: ConceptRow): Concept => ({
   name: row.name,
   matrixId: row.matrix_id,
   selections: (row.selections as Record<string, string>) || {},
-  selectionsSnapshot: (row.selections_snapshot as SelectionsSnapshot) || {},
+  selectionsSnapshot: (row.selections_snapshot as unknown as SelectionsSnapshot) || {},
   description: row.description,
   generatedBy: row.generated_by as Concept['generatedBy'],
   createdAt: row.created_at,
@@ -66,8 +66,13 @@ async function buildSelectionsSnapshot(
   if (functionsRes.error) throw functionsRes.error;
   if (principlesRes.error) throw principlesRes.error;
 
-  const fnMap = new Map((functionsRes.data || []).map((f) => [f.id, f]));
-  const prMap = new Map((principlesRes.data || []).map((p) => [p.id, p]));
+  const fnMap = new Map<string, { id: string; name: string; color: string }>(
+    (functionsRes.data || []).map((f) => [f.id, f] as const)
+  );
+  const prMap = new Map<
+    string,
+    { id: string; title: string; description: string; image_url: string | null }
+  >((principlesRes.data || []).map((p) => [p.id, p] as const));
 
   const snapshot: SelectionsSnapshot = {};
   for (const [funcId, principleId] of Object.entries(selections)) {
@@ -119,7 +124,7 @@ export function useConcepts(matrixId?: string) {
         name: concept.name,
         matrix_id: concept.matrixId,
         selections: concept.selections,
-        selections_snapshot: snapshot,
+        selections_snapshot: snapshot as unknown as ConceptInsert['selections_snapshot'],
         description: concept.description,
         generated_by: concept.generatedBy,
       };
@@ -149,7 +154,8 @@ export function useConcepts(matrixId?: string) {
       if (concept.selections !== undefined) {
         update.selections = concept.selections;
         // Rebuild snapshot whenever selections change to keep it frozen-but-current.
-        update.selections_snapshot = await buildSelectionsSnapshot(concept.selections);
+        const snap = await buildSelectionsSnapshot(concept.selections);
+        update.selections_snapshot = snap as unknown as ConceptUpdate['selections_snapshot'];
       }
       if (concept.description !== undefined) update.description = concept.description;
       if (concept.generatedBy !== undefined) update.generated_by = concept.generatedBy;
