@@ -69,14 +69,11 @@ export default function Concepts() {
   const getMatrixName = (matrixId: string) =>
     matrices.find(m => m.id === matrixId)?.name || 'Matriz removida';
 
-  const getFunctionName = (funcId: string) =>
-    functions.find(f => f.id === funcId)?.name || 'Função';
+  const resolveConcept = (concept: typeof concepts[0]): ResolvedSelection[] =>
+    resolveSnapshot(concept.selectionsSnapshot, concept.selections, functions, principles);
 
-  const getPrincipleTitle = (principleId: string) =>
-    principles.find(p => p.id === principleId)?.title || 'Princípio';
-
-  const getFunctionColor = (funcId: string) =>
-    functions.find(f => f.id === funcId)?.color || '#6b7280';
+  const currentViewConcept = concepts.find(c => c.id === viewConcept);
+  const currentResolved = currentViewConcept ? resolveConcept(currentViewConcept) : [];
 
   const currentViewConcept = concepts.find(c => c.id === viewConcept);
 
