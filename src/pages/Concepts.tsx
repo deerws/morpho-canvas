@@ -288,16 +288,40 @@ export default function Concepts() {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Seleções</h4>
                 <div className="space-y-2 bg-muted rounded-lg p-3">
-                  {Object.entries(currentViewConcept.selections).map(([funcId, principleId]) => (
-                    <div key={funcId} className="flex items-center gap-2 text-sm">
-                      <Badge 
+                  {currentResolved.map((r) => (
+                    <div key={r.functionId} className="flex items-start gap-2 text-sm flex-wrap">
+                      <Badge
                         variant="outline"
-                        style={{ borderColor: getFunctionColor(funcId) }}
+                        style={{ borderColor: r.functionColor }}
                       >
-                        {getFunctionName(funcId)}
+                        {r.functionName || 'Função removida'}
                       </Badge>
                       <span className="text-muted-foreground">→</span>
-                      <span className="font-medium">{getPrincipleTitle(principleId)}</span>
+                      <span className="font-medium">{r.principleTitle || 'Princípio sem título'}</span>
+                      {r.status === 'removed' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="gap-1 bg-warning/15 text-warning border border-warning/40 hover:bg-warning/20">
+                              <AlertTriangle className="w-3 h-3" /> Fonte original removida
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            Este princípio foi modificado/removido pelo autor após você usá-lo. Seu conceito continua exibindo a versão original.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {r.status === 'modified' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="gap-1 bg-primary/15 text-primary border border-primary/40 hover:bg-primary/20">
+                              <Info className="w-3 h-3" /> Fonte original alterada após uso
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            Este princípio foi modificado/removido pelo autor após você usá-lo. Seu conceito continua exibindo a versão original.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   ))}
                 </div>
