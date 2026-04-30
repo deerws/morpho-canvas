@@ -8,11 +8,23 @@ type ConceptRow = Database['public']['Tables']['concepts']['Row'];
 type ConceptInsert = Database['public']['Tables']['concepts']['Insert'];
 type ConceptUpdate = Database['public']['Tables']['concepts']['Update'];
 
+export interface SnapshotEntry {
+  functionName: string;
+  functionColor: string;
+  principleId: string;
+  principleTitle: string;
+  principleDescription: string;
+  principleImageUrl: string | null;
+}
+
+export type SelectionsSnapshot = Record<string, SnapshotEntry>;
+
 export interface Concept {
   id: string;
   name: string;
   matrixId: string;
   selections: Record<string, string>;
+  selectionsSnapshot: SelectionsSnapshot;
   description: string | null;
   generatedBy: 'manual' | 'ia';
   createdAt: string;
@@ -23,10 +35,55 @@ const mapRowToConcept = (row: ConceptRow): Concept => ({
   name: row.name,
   matrixId: row.matrix_id,
   selections: (row.selections as Record<string, string>) || {},
+  selectionsSnapshot: (row.selections_snapshot as SelectionsSnapshot) || {},
   description: row.description,
   generatedBy: row.generated_by as Concept['generatedBy'],
   createdAt: row.created_at,
 });
+
+/**
+ * Builds a frozen snapshot of the referenced functions/principles.
+ * Reads live data from Supabase so it works regardless of which page calls it.
+ */
+async function buildSelectionsSnapshot(
+  selections: Record<string, string>
+): Promise<SelectionsSnapshot> {
+  const functionIds = Object.keys(selections);
+  const principleIds = Object.values(selections).filter(Boolean);
+
+  if (functionIds.length === 0) return {};
+
+  const [functionsRes, principlesRes] = await Promise.all([
+    supabase.from('functions').select('id, name, color').in('id', functionIds),
+    principleIds.length > 0
+      ? supabase
+          .from('principles')
+          .select('id, title, description, image_url')
+          .in('id', principleIds)
+      : Promise.resolve({ data: [], error: null } as const),
+  ]);
+
+  if (functionsRes.error) throw functionsRes.error;
+  if (principlesRes.error) throw principlesRes.error;
+
+  const fnMap = new Map((functionsRes.data || []).map((f) => [f.id, f]));
+  const prMap = new Map((principlesRes.data || []).map((p) => [p.id, p]));
+
+  const snapshot: SelectionsSnapshot = {};
+  for (const [funcId, principleId] of Object.entries(selections)) {
+    const f = fnMap.get(funcId);
+    const p = prMap.get(principleId);
+    snapshot[funcId] = {
+      functionName: f?.name || '',
+      functionColor: f?.color || '#6b7280',
+      principleId: principleId || '',
+      principleTitle: p?.title || '',
+      principleDescription: p?.description || '',
+      principleImageUrl: p?.image_url || null,
+    };
+  }
+  return snapshot;
+}
 
 export function useConcepts(matrixId?: string) {
   const { user } = useAuth();
@@ -53,13 +110,16 @@ export function useConcepts(matrixId?: string) {
   });
 
   const addConcept = useMutation({
-    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt'>) => {
+    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt' | 'selectionsSnapshot'>) => {
       if (!user) throw new Error('Usuário não autenticado');
+
+      const snapshot = await buildSelectionsSnapshot(concept.selections);
 
       const insert: ConceptInsert = {
         name: concept.name,
         matrix_id: concept.matrixId,
         selections: concept.selections,
+        selections_snapshot: snapshot,
         description: concept.description,
         generated_by: concept.generatedBy,
       };
@@ -86,7 +146,11 @@ export function useConcepts(matrixId?: string) {
     mutationFn: async ({ id, ...concept }: Partial<Concept> & { id: string }) => {
       const update: ConceptUpdate = {};
       if (concept.name !== undefined) update.name = concept.name;
-      if (concept.selections !== undefined) update.selections = concept.selections;
+      if (concept.selections !== undefined) {
+        update.selections = concept.selections;
+        // Rebuild snapshot whenever selections change to keep it frozen-but-current.
+        update.selections_snapshot = await buildSelectionsSnapshot(concept.selections);
+      }
       if (concept.description !== undefined) update.description = concept.description;
       if (concept.generatedBy !== undefined) update.generated_by = concept.generatedBy;
 
