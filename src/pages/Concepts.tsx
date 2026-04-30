@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info } from 'lucide-react';
+import { resolveSnapshot, type ResolvedSelection } from '@/lib/snapshotResolver';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,26 +69,23 @@ export default function Concepts() {
   const getMatrixName = (matrixId: string) =>
     matrices.find(m => m.id === matrixId)?.name || 'Matriz removida';
 
-  const getFunctionName = (funcId: string) =>
-    functions.find(f => f.id === funcId)?.name || 'Função';
-
-  const getPrincipleTitle = (principleId: string) =>
-    principles.find(p => p.id === principleId)?.title || 'Princípio';
-
-  const getFunctionColor = (funcId: string) =>
-    functions.find(f => f.id === funcId)?.color || '#6b7280';
+  const resolveConcept = (concept: typeof concepts[0]): ResolvedSelection[] =>
+    resolveSnapshot(concept.selectionsSnapshot, concept.selections, functions, principles);
 
   const currentViewConcept = concepts.find(c => c.id === viewConcept);
+  const currentResolved = currentViewConcept ? resolveConcept(currentViewConcept) : [];
 
   const handleExport = (concept: typeof concepts[0]) => {
+    const resolved = resolveConcept(concept);
     const data = {
       name: concept.name,
       description: concept.description,
       generatedBy: concept.generatedBy,
       createdAt: concept.createdAt,
-      selections: Object.entries(concept.selections).map(([funcId, principleId]) => ({
-        function: getFunctionName(funcId),
-        principle: getPrincipleTitle(principleId),
+      selections: resolved.map(r => ({
+        function: r.functionName,
+        principle: r.principleTitle,
+        sourceStatus: r.status,
       })),
     };
     
@@ -146,6 +144,8 @@ export default function Concepts() {
               const isOwner = matrix?.userId === user?.id;
               const canDelete = isOwner ? !isReadOnly : isTeacher;
               const showModerateBadge = isTeacher && !isOwner;
+              const cardResolved = resolveConcept(concept);
+              const hasSourceChanges = cardResolved.some(r => r.status !== 'identical');
               return (
               <Card key={concept.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
@@ -174,23 +174,36 @@ export default function Concepts() {
                     {concept.description || 'Sem descrição'}
                   </CardDescription>
                   
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {Object.keys(concept.selections).slice(0, 3).map(funcId => (
-                      <Badge 
-                        key={funcId} 
-                        variant="outline" 
+                  <div className="flex flex-wrap items-center gap-1 mb-3">
+                    {cardResolved.slice(0, 3).map(r => (
+                      <Badge
+                        key={r.functionId}
+                        variant="outline"
                         className="text-xs"
-                        style={{ borderColor: getFunctionColor(funcId) }}
+                        style={{ borderColor: r.functionColor }}
                       >
-                        {getFunctionName(funcId).slice(0, 15)}...
+                        {(r.functionName || 'Função').slice(0, 15)}{(r.functionName || '').length > 15 ? '…' : ''}
                       </Badge>
                     ))}
-                    {Object.keys(concept.selections).length > 3 && (
+                    {cardResolved.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{Object.keys(concept.selections).length - 3}
+                        +{cardResolved.length - 3}
                       </Badge>
                     )}
+                    {hasSourceChanges && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs gap-1 border-warning/60 text-warning">
+                            <AlertTriangle className="w-3 h-3" /> Fonte alterada
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Algum princípio foi modificado ou removido após o uso. O conceito mantém a versão original.
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
+
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="truncate">{getMatrixName(concept.matrixId)}</span>
@@ -275,16 +288,40 @@ export default function Concepts() {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Seleções</h4>
                 <div className="space-y-2 bg-muted rounded-lg p-3">
-                  {Object.entries(currentViewConcept.selections).map(([funcId, principleId]) => (
-                    <div key={funcId} className="flex items-center gap-2 text-sm">
-                      <Badge 
+                  {currentResolved.map((r) => (
+                    <div key={r.functionId} className="flex items-start gap-2 text-sm flex-wrap">
+                      <Badge
                         variant="outline"
-                        style={{ borderColor: getFunctionColor(funcId) }}
+                        style={{ borderColor: r.functionColor }}
                       >
-                        {getFunctionName(funcId)}
+                        {r.functionName || 'Função removida'}
                       </Badge>
                       <span className="text-muted-foreground">→</span>
-                      <span className="font-medium">{getPrincipleTitle(principleId)}</span>
+                      <span className="font-medium">{r.principleTitle || 'Princípio sem título'}</span>
+                      {r.status === 'removed' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="gap-1 bg-warning/15 text-warning border border-warning/40 hover:bg-warning/20">
+                              <AlertTriangle className="w-3 h-3" /> Fonte original removida
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            Este princípio foi modificado/removido pelo autor após você usá-lo. Seu conceito continua exibindo a versão original.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {r.status === 'modified' && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="gap-1 bg-primary/15 text-primary border border-primary/40 hover:bg-primary/20">
+                              <Info className="w-3 h-3" /> Fonte original alterada após uso
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            Este princípio foi modificado/removido pelo autor após você usá-lo. Seu conceito continua exibindo a versão original.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   ))}
                 </div>
