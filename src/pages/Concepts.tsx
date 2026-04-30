@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info } from 'lucide-react';
+import { resolveSnapshot, type ResolvedSelection } from '@/lib/snapshotResolver';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
