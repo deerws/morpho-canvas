@@ -144,6 +144,8 @@ export default function Concepts() {
               const isOwner = matrix?.userId === user?.id;
               const canDelete = isOwner ? !isReadOnly : isTeacher;
               const showModerateBadge = isTeacher && !isOwner;
+              const cardResolved = resolveConcept(concept);
+              const hasSourceChanges = cardResolved.some(r => r.status !== 'identical');
               return (
               <Card key={concept.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
