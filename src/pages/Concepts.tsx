@@ -174,23 +174,36 @@ export default function Concepts() {
                     {concept.description || 'Sem descrição'}
                   </CardDescription>
                   
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {Object.keys(concept.selections).slice(0, 3).map(funcId => (
-                      <Badge 
-                        key={funcId} 
-                        variant="outline" 
+                  <div className="flex flex-wrap items-center gap-1 mb-3">
+                    {cardResolved.slice(0, 3).map(r => (
+                      <Badge
+                        key={r.functionId}
+                        variant="outline"
                         className="text-xs"
-                        style={{ borderColor: getFunctionColor(funcId) }}
+                        style={{ borderColor: r.functionColor }}
                       >
-                        {getFunctionName(funcId).slice(0, 15)}...
+                        {(r.functionName || 'Função').slice(0, 15)}{(r.functionName || '').length > 15 ? '…' : ''}
                       </Badge>
                     ))}
-                    {Object.keys(concept.selections).length > 3 && (
+                    {cardResolved.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{Object.keys(concept.selections).length - 3}
+                        +{cardResolved.length - 3}
                       </Badge>
                     )}
+                    {hasSourceChanges && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs gap-1 border-warning/60 text-warning">
+                            <AlertTriangle className="w-3 h-3" /> Fonte alterada
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Algum princípio foi modificado ou removido após o uso. O conceito mantém a versão original.
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
+
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="truncate">{getMatrixName(concept.matrixId)}</span>
