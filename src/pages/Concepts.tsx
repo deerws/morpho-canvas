@@ -75,17 +75,17 @@ export default function Concepts() {
   const currentViewConcept = concepts.find(c => c.id === viewConcept);
   const currentResolved = currentViewConcept ? resolveConcept(currentViewConcept) : [];
 
-  const currentViewConcept = concepts.find(c => c.id === viewConcept);
-
   const handleExport = (concept: typeof concepts[0]) => {
+    const resolved = resolveConcept(concept);
     const data = {
       name: concept.name,
       description: concept.description,
       generatedBy: concept.generatedBy,
       createdAt: concept.createdAt,
-      selections: Object.entries(concept.selections).map(([funcId, principleId]) => ({
-        function: getFunctionName(funcId),
-        principle: getPrincipleTitle(principleId),
+      selections: resolved.map(r => ({
+        function: r.functionName,
+        principle: r.principleTitle,
+        sourceStatus: r.status,
       })),
     };
     
