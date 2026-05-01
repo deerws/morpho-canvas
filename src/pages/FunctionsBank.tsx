@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FunctionsBank() {
   const { functions, deleteFunction, isLoading: loadingFunctions } = useFunctions();
@@ -37,6 +38,8 @@ export default function FunctionsBank() {
   const [editingPrinciple, setEditingPrinciple] = useState<Principle | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'function' | 'principle'; id: string } | null>(null);
+  const [othersUsageCount, setOthersUsageCount] = useState<number>(0);
+  const [checkingUsage, setCheckingUsage] = useState(false);
 
   const filteredFunctions = functions.filter(f =>
     f.name.toLowerCase().includes(searchFunction.toLowerCase())
@@ -70,9 +73,43 @@ export default function FunctionsBank() {
     setItemToDelete(null);
   };
 
-  const confirmDelete = (type: 'function' | 'principle', id: string) => {
+  const confirmDelete = async (type: 'function' | 'principle', id: string) => {
     setItemToDelete({ type, id });
+    setOthersUsageCount(0);
     setDeleteDialogOpen(true);
+    setCheckingUsage(true);
+    try {
+      // Buscar conceitos (com matriz) que referenciam o item
+      const { data: rows, error } = await supabase
+        .from('concepts')
+        .select('id, selections, selections_snapshot, matrices!inner(user_id)');
+      if (error) throw error;
+      let count = 0;
+      for (const row of rows || []) {
+        const ownerId = (row as any).matrices?.user_id;
+        if (!ownerId || ownerId === user?.id) continue;
+        const sel = (row.selections || {}) as Record<string, string>;
+        const snap = (row.selections_snapshot || {}) as Record<string, any>;
+        let referenced = false;
+        if (type === 'function') {
+          if (sel[id] !== undefined) referenced = true;
+          if (!referenced && snap[id]) referenced = true;
+        } else {
+          if (Object.values(sel).includes(id)) referenced = true;
+          if (!referenced) {
+            for (const entry of Object.values(snap)) {
+              if (entry && (entry as any).principleId === id) { referenced = true; break; }
+            }
+          }
+        }
+        if (referenced) count++;
+      }
+      setOthersUsageCount(count);
+    } catch {
+      setOthersUsageCount(0);
+    } finally {
+      setCheckingUsage(false);
+    }
   };
 
   const getPrincipleCount = (functionId: string) => 
