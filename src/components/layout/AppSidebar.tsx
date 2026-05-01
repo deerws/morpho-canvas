@@ -87,7 +87,7 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{user?.user_metadata?.name || user?.email || 'Usuário'}</p>
-            <Badge variant={roleVariant} className="text-[10px] h-4 px-1.5 mt-0.5">{roleLabel}</Badge>
+            <Badge className={cn('text-[10px] h-4 px-1.5 mt-0.5 border-transparent', roleClass)}>{roleLabel}</Badge>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="w-4 h-4" />
