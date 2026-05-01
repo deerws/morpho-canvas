@@ -31,7 +31,13 @@ export function AppSidebar() {
   };
 
   const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Professor' : isViewer ? 'Espectador' : 'Aluno';
-  const roleVariant: 'default' | 'secondary' | 'outline' = isViewer ? 'secondary' : isTeacher ? 'default' : 'outline';
+  const roleClass = isAdmin
+    ? 'bg-red-600 text-white hover:bg-red-600'
+    : isTeacher
+    ? 'bg-blue-600 text-white hover:bg-blue-600'
+    : isViewer
+    ? 'bg-gray-500 text-white hover:bg-gray-500'
+    : 'bg-green-600 text-white hover:bg-green-600';
 
   return (
     <Sidebar className="border-r border-border">
