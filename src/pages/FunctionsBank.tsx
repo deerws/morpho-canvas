@@ -328,16 +328,26 @@ export default function FunctionsBank() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>
+              {othersUsageCount > 0 ? 'Atenção: item em uso por outros alunos' : 'Confirmar exclusão'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover este {itemToDelete?.type === 'function' ? 'função' : 'princípio'}?
-              Esta ação não pode ser desfeita.
+              {checkingUsage ? (
+                <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Verificando uso por outros alunos…</span>
+              ) : othersUsageCount > 0 ? (
+                <>
+                  <strong>{othersUsageCount}</strong> {othersUsageCount === 1 ? 'conceito de outro aluno usa' : 'conceitos de outros alunos usam'} este {itemToDelete?.type === 'function' ? 'função' : 'princípio'}.
+                  Eles continuarão funcionando com a versão em snapshot, mas o item desaparecerá do banco para novos usos. Deseja continuar?
+                </>
+              ) : (
+                <>Tem certeza que deseja remover {itemToDelete?.type === 'function' ? 'esta função' : 'este princípio'}? Esta ação não pode ser desfeita.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Remover
+            <AlertDialogAction onClick={handleDelete} disabled={checkingUsage} className="bg-destructive text-destructive-foreground">
+              {othersUsageCount > 0 ? 'Excluir mesmo assim' : 'Remover'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
