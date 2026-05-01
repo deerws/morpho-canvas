@@ -31,7 +31,13 @@ export function AppSidebar() {
   };
 
   const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Professor' : isViewer ? 'Espectador' : 'Aluno';
-  const roleVariant: 'default' | 'secondary' | 'outline' = isViewer ? 'secondary' : isTeacher ? 'default' : 'outline';
+  const roleClass = isAdmin
+    ? 'bg-red-600 text-white hover:bg-red-600'
+    : isTeacher
+    ? 'bg-blue-600 text-white hover:bg-blue-600'
+    : isViewer
+    ? 'bg-gray-500 text-white hover:bg-gray-500'
+    : 'bg-green-600 text-white hover:bg-green-600';
 
   return (
     <Sidebar className="border-r border-border">
@@ -81,7 +87,7 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{user?.user_metadata?.name || user?.email || 'Usuário'}</p>
-            <Badge variant={roleVariant} className="text-[10px] h-4 px-1.5 mt-0.5">{roleLabel}</Badge>
+            <Badge className={cn('text-[10px] h-4 px-1.5 mt-0.5 border-transparent', roleClass)}>{roleLabel}</Badge>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="w-4 h-4" />

@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FunctionsBank() {
   const { functions, deleteFunction, isLoading: loadingFunctions } = useFunctions();
@@ -37,6 +38,8 @@ export default function FunctionsBank() {
   const [editingPrinciple, setEditingPrinciple] = useState<Principle | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'function' | 'principle'; id: string } | null>(null);
+  const [othersUsageCount, setOthersUsageCount] = useState<number>(0);
+  const [checkingUsage, setCheckingUsage] = useState(false);
 
   const filteredFunctions = functions.filter(f =>
     f.name.toLowerCase().includes(searchFunction.toLowerCase())
@@ -70,9 +73,43 @@ export default function FunctionsBank() {
     setItemToDelete(null);
   };
 
-  const confirmDelete = (type: 'function' | 'principle', id: string) => {
+  const confirmDelete = async (type: 'function' | 'principle', id: string) => {
     setItemToDelete({ type, id });
+    setOthersUsageCount(0);
     setDeleteDialogOpen(true);
+    setCheckingUsage(true);
+    try {
+      // Buscar conceitos (com matriz) que referenciam o item
+      const { data: rows, error } = await supabase
+        .from('concepts')
+        .select('id, selections, selections_snapshot, matrices!inner(user_id)');
+      if (error) throw error;
+      let count = 0;
+      for (const row of rows || []) {
+        const ownerId = (row as any).matrices?.user_id;
+        if (!ownerId || ownerId === user?.id) continue;
+        const sel = (row.selections || {}) as Record<string, string>;
+        const snap = (row.selections_snapshot || {}) as Record<string, any>;
+        let referenced = false;
+        if (type === 'function') {
+          if (sel[id] !== undefined) referenced = true;
+          if (!referenced && snap[id]) referenced = true;
+        } else {
+          if (Object.values(sel).includes(id)) referenced = true;
+          if (!referenced) {
+            for (const entry of Object.values(snap)) {
+              if (entry && (entry as any).principleId === id) { referenced = true; break; }
+            }
+          }
+        }
+        if (referenced) count++;
+      }
+      setOthersUsageCount(count);
+    } catch {
+      setOthersUsageCount(0);
+    } finally {
+      setCheckingUsage(false);
+    }
   };
 
   const getPrincipleCount = (functionId: string) => 
@@ -291,16 +328,26 @@ export default function FunctionsBank() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>
+              {othersUsageCount > 0 ? 'Atenção: item em uso por outros alunos' : 'Confirmar exclusão'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover este {itemToDelete?.type === 'function' ? 'função' : 'princípio'}?
-              Esta ação não pode ser desfeita.
+              {checkingUsage ? (
+                <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Verificando uso por outros alunos…</span>
+              ) : othersUsageCount > 0 ? (
+                <>
+                  <strong>{othersUsageCount}</strong> {othersUsageCount === 1 ? 'conceito de outro aluno usa' : 'conceitos de outros alunos usam'} este {itemToDelete?.type === 'function' ? 'função' : 'princípio'}.
+                  Eles continuarão funcionando com a versão em snapshot, mas o item desaparecerá do banco para novos usos. Deseja continuar?
+                </>
+              ) : (
+                <>Tem certeza que deseja remover {itemToDelete?.type === 'function' ? 'esta função' : 'este princípio'}? Esta ação não pode ser desfeita.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Remover
+            <AlertDialogAction onClick={handleDelete} disabled={checkingUsage} className="bg-destructive text-destructive-foreground">
+              {othersUsageCount > 0 ? 'Excluir mesmo assim' : 'Remover'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
