@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Save, Trash2, ChevronUp, ChevronDown, Lightbulb, Loader2, Sparkles, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useMatrices, useMatrix } from '@/hooks/useMatrices';
