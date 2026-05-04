@@ -60,13 +60,55 @@ export default function MatrixEditor() {
     }
   }, [isNew, existingMatrix, navigate, loadingMatrix, id]);
 
-  const selectedFunctions = functions.filter(f => selectedFunctionIds.includes(f.id));
-  
-  const getPrinciplesForFunction = (functionId: string) => 
+  const matrixSnapshot = existingMatrix?.selectionsSnapshot || {};
+
+  // Resolve function display info: prefer snapshot (frozen) and flag mismatches.
+  type FuncDisplay = {
+    id: string;
+    name: string;
+    color: string;
+    status: 'identical' | 'modified' | 'removed';
+    live?: { name: string; color: string };
+  };
+  const resolveFunctionDisplay = (functionId: string): FuncDisplay => {
+    const live = functions.find((f) => f.id === functionId);
+    const snap = matrixSnapshot[functionId];
+    if (snap) {
+      if (!live) {
+        return { id: functionId, name: snap.functionName, color: snap.functionColor, status: 'removed' };
+      }
+      const sameName = live.name === snap.functionName;
+      const sameColor = live.color === snap.functionColor;
+      if (!sameName || !sameColor) {
+        return {
+          id: functionId,
+          name: snap.functionName,
+          color: snap.functionColor,
+          status: 'modified',
+          live: { name: live.name, color: live.color },
+        };
+      }
+      return { id: functionId, name: snap.functionName, color: snap.functionColor, status: 'identical' };
+    }
+    // No snapshot yet (fresh selection not saved)
+    return {
+      id: functionId,
+      name: live?.name || '',
+      color: live?.color || '#6b7280',
+      status: 'identical',
+    };
+  };
+
+  // For matrix structure we render rows from selectedFunctionIds (so removed ones still appear).
+  const selectedFunctions = selectedFunctionIds
+    .map((fid) => functions.find((f) => f.id === fid))
+    .filter(Boolean) as typeof functions;
+
+  const getPrinciplesForFunction = (functionId: string) =>
     principles.filter(p => p.functionId === functionId);
 
   const maxPrinciples = Math.max(
-    ...selectedFunctions.map(f => getPrinciplesForFunction(f.id).length),
+    ...selectedFunctionIds.map(fid => getPrinciplesForFunction(fid).length),
     1
   );
 
