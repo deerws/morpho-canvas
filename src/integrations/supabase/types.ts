@@ -193,6 +193,7 @@ export type Database = {
           function_ids: string[] | null
           id: string
           name: string
+          selections_snapshot: Json
           updated_at: string
           user_id: string
         }
@@ -202,6 +203,7 @@ export type Database = {
           function_ids?: string[] | null
           id?: string
           name: string
+          selections_snapshot?: Json
           updated_at?: string
           user_id: string
         }
@@ -211,6 +213,7 @@ export type Database = {
           function_ids?: string[] | null
           id?: string
           name?: string
+          selections_snapshot?: Json
           updated_at?: string
           user_id?: string
         }
