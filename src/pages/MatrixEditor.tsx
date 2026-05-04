@@ -458,45 +458,46 @@ export default function MatrixEditor() {
                 <CardTitle className="text-sm">Função Selecionada</CardTitle>
               </CardHeader>
               <CardContent>
-                {selectedFunction ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: functions.find(f => f.id === selectedFunction)?.color }}
-                      />
-                      <span className="font-medium text-sm text-foreground">
-                        {functions.find(f => f.id === selectedFunction)?.name}
-                      </span>
+                {selectedFunction ? (() => {
+                  const sd = resolveFunctionDisplay(selectedFunction);
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: sd.color }}
+                        />
+                        <span className="font-medium text-sm text-foreground">
+                          {sd.name || '(sem nome)'}
+                        </span>
+                        {sd.status === 'modified' && (
+                          <Badge variant="outline" className="border-blue-500 text-blue-600 text-[10px] gap-1">
+                            <Info className="w-3 h-3" /> Fonte alterada
+                          </Badge>
+                        )}
+                        {sd.status === 'removed' && (
+                          <Badge variant="outline" className="border-yellow-500 text-yellow-600 text-[10px] gap-1">
+                            <AlertTriangle className="w-3 h-3" /> Fonte removida
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {getPrinciplesForFunction(selectedFunction).length} princípios cadastrados
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" onClick={() => handleMoveFunction(selectedFunction, 'up')}>
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleMoveFunction(selectedFunction, 'down')}>
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleRemoveFunction(selectedFunction)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {getPrinciplesForFunction(selectedFunction).length} princípios cadastrados
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleMoveFunction(selectedFunction, 'up')}
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleMoveFunction(selectedFunction, 'down')}
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleRemoveFunction(selectedFunction)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
+                  );
+                })() : (
                   <p className="text-sm text-muted-foreground">
                     Clique em uma função na matriz para selecioná-la
                   </p>
