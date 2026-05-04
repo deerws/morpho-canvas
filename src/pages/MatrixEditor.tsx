@@ -299,42 +299,87 @@ export default function MatrixEditor() {
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedFunctions.map((func) => {
-                          const funcPrinciples = getPrinciplesForFunction(func.id);
+                        {selectedFunctionIds.map((fid) => {
+                          const display = resolveFunctionDisplay(fid);
+                          const funcPrinciples = getPrinciplesForFunction(fid);
+                          const isRemoved = display.status === 'removed';
                           return (
-                            <tr key={func.id} className="group">
-                              <td 
+                            <tr key={fid} className="group">
+                              <td
                                 className={cn(
                                   "sticky left-0 bg-card z-10 border border-border p-3 cursor-pointer transition-colors",
-                                  selectedFunction === func.id ? "bg-primary/10" : "hover:bg-accent"
+                                  selectedFunction === fid ? "bg-primary/10" : "hover:bg-accent"
                                 )}
-                                onClick={() => setSelectedFunction(func.id)}
+                                onClick={() => setSelectedFunction(fid)}
                               >
-                                <div className="flex items-center gap-2">
-                                  <div 
-                                    className="w-3 h-3 rounded-full" 
-                                    style={{ backgroundColor: func.color }}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <div
+                                    className="w-3 h-3 rounded-full shrink-0"
+                                    style={{ backgroundColor: display.color }}
                                   />
-                                  <span className="font-medium text-foreground text-sm">{func.name}</span>
+                                  <span className="font-medium text-foreground text-sm">{display.name || '(sem nome)'}</span>
+                                  {display.status === 'modified' && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Badge variant="outline" className="border-blue-500 text-blue-600 text-[10px] gap-1 cursor-help">
+                                            <Info className="w-3 h-3" />
+                                            Fonte alterada
+                                          </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs max-w-xs">
+                                            Esta função foi modificada pelo autor após esta matriz ser salva.
+                                            Esta matriz continua exibindo a versão original.
+                                            {display.live && (
+                                              <span className="block mt-1 text-muted-foreground">
+                                                Versão atual: {display.live.name}
+                                              </span>
+                                            )}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {isRemoved && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Badge variant="outline" className="border-yellow-500 text-yellow-600 text-[10px] gap-1 cursor-help">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Fonte removida
+                                          </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs max-w-xs">
+                                            Esta função foi removida do banco após esta matriz ser salva.
+                                            Esta matriz continua exibindo a versão original.
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
                                 </div>
                               </td>
                               {Array.from({ length: maxPrinciples }, (_, i) => {
                                 const principle = funcPrinciples[i];
-                                const isSelected = principle && conceptSelections[func.id] === principle.id;
+                                const isSelected = principle && conceptSelections[fid] === principle.id;
                                 return (
-                                  <td 
-                                    key={i} 
+                                  <td
+                                    key={i}
                                     className={cn(
-                                      "border border-border p-2 text-center transition-colors cursor-pointer",
-                                      isSelected ? "bg-primary/20 ring-2 ring-primary" : "hover:bg-accent"
+                                      "border border-border p-2 text-center transition-colors",
+                                      !isRemoved && "cursor-pointer",
+                                      isSelected ? "bg-primary/20 ring-2 ring-primary" : !isRemoved && "hover:bg-accent",
+                                      isRemoved && "opacity-50"
                                     )}
-                                    onClick={() => principle && handleSelectPrinciple(func.id, principle.id)}
+                                    onClick={() => !isRemoved && principle && handleSelectPrinciple(fid, principle.id)}
                                   >
                                     {principle ? (
                                       <div className="flex flex-col items-center">
                                         {principle.imageUrl ? (
-                                          <img 
-                                            src={principle.imageUrl} 
+                                          <img
+                                            src={principle.imageUrl}
                                             alt={principle.title}
                                             className="w-20 h-20 object-cover rounded mb-1"
                                           />
@@ -349,30 +394,32 @@ export default function MatrixEditor() {
                                           {principle.title}
                                         </span>
                                       </div>
-                                    ) : (
-                                      <Button 
-                                        variant="ghost" 
+                                    ) : !isRemoved ? (
+                                      <Button
+                                        variant="ghost"
                                         size="sm"
                                         className="opacity-0 group-hover:opacity-100"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleAddPrincipleToFunction(func.id);
+                                          handleAddPrincipleToFunction(fid);
                                         }}
                                       >
                                         <Plus className="w-4 h-4" />
                                       </Button>
-                                    )}
+                                    ) : null}
                                   </td>
                                 );
                               })}
                               <td className="border border-border p-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleAddPrincipleToFunction(func.id)}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
+                                {!isRemoved && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleAddPrincipleToFunction(fid)}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </td>
                             </tr>
                           );
