@@ -8,12 +8,20 @@ type MatrixRow = Database['public']['Tables']['matrices']['Row'];
 type MatrixInsert = Database['public']['Tables']['matrices']['Insert'];
 type MatrixUpdate = Database['public']['Tables']['matrices']['Update'];
 
+export interface MatrixFunctionSnapshotEntry {
+  functionName: string;
+  functionColor: string;
+}
+
+export type MatrixSelectionsSnapshot = Record<string, MatrixFunctionSnapshotEntry>;
+
 export interface Matrix {
   id: string;
   name: string;
   description: string | null;
   userId: string;
   functionIds: string[];
+  selectionsSnapshot: MatrixSelectionsSnapshot;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,9 +32,39 @@ const mapRowToMatrix = (row: MatrixRow): Matrix => ({
   description: row.description,
   userId: row.user_id,
   functionIds: row.function_ids || [],
+  selectionsSnapshot:
+    ((row as unknown as { selections_snapshot?: MatrixSelectionsSnapshot })
+      .selections_snapshot as MatrixSelectionsSnapshot) || {},
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+
+/**
+ * Builds a frozen snapshot of the functions referenced by `functionIds`.
+ * Reads live data from Supabase so it works regardless of caller.
+ */
+async function buildMatrixSnapshot(
+  functionIds: string[]
+): Promise<MatrixSelectionsSnapshot> {
+  if (!functionIds || functionIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('functions')
+    .select('id, name, color')
+    .in('id', functionIds);
+
+  if (error) throw error;
+
+  const snap: MatrixSelectionsSnapshot = {};
+  for (const f of data || []) {
+    snap[f.id] = { functionName: f.name, functionColor: f.color };
+  }
+  // Preserve entries even for functions that no longer exist (defensive)
+  for (const id of functionIds) {
+    if (!snap[id]) snap[id] = { functionName: '', functionColor: '#6b7280' };
+  }
+  return snap;
+}
 
 export function useMatrices() {
   const { user } = useAuth();
@@ -47,14 +85,20 @@ export function useMatrices() {
   });
 
   const addMatrix = useMutation({
-    mutationFn: async (matrix: Omit<Matrix, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+    mutationFn: async (
+      matrix: Omit<Matrix, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'selectionsSnapshot'>
+    ) => {
       if (!user) throw new Error('Usuário não autenticado');
+
+      const snapshot = await buildMatrixSnapshot(matrix.functionIds);
 
       const insert: MatrixInsert = {
         name: matrix.name,
         description: matrix.description,
         function_ids: matrix.functionIds,
         user_id: user.id,
+        // @ts-expect-error - selections_snapshot column added via migration
+        selections_snapshot: snapshot,
       };
 
       const { data, error } = await supabase
@@ -80,7 +124,12 @@ export function useMatrices() {
       const update: MatrixUpdate = {};
       if (matrix.name !== undefined) update.name = matrix.name;
       if (matrix.description !== undefined) update.description = matrix.description;
-      if (matrix.functionIds !== undefined) update.function_ids = matrix.functionIds;
+      if (matrix.functionIds !== undefined) {
+        update.function_ids = matrix.functionIds;
+        const snap = await buildMatrixSnapshot(matrix.functionIds);
+        // @ts-expect-error - selections_snapshot column added via migration
+        update.selections_snapshot = snap;
+      }
 
       const { data, error } = await supabase
         .from('matrices')
@@ -94,6 +143,7 @@ export function useMatrices() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matrices'] });
+      queryClient.invalidateQueries({ queryKey: ['matrix'] });
       toast.success('Matriz atualizada com sucesso!');
     },
     onError: () => {
