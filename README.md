@@ -199,6 +199,54 @@ flowchart TD
     K --> L[Access all features]
 ```
 
+### Class Lifecycle (Teacher → Student → Viewer)
+
+```mermaid
+flowchart TD
+    T[Professor logs in] --> C[Creates new class with semester]
+    C --> E[Adds student emails individual or spreadsheet]
+    E --> I[Invitations stored as pending]
+    I --> S[Student accesses /register]
+    S --> V{validate-invitation finds pending invite?}
+    V -->|No| X[Signup blocked]
+    V -->|Yes| R[Signup completes]
+    R --> A[Trigger auto-enrolls student in class]
+    A --> RS[Role student assigned]
+    RS --> W[Student creates functions, principles, matrices, concepts]
+    W --> END{Semester ends}
+    END -->|Teacher clicks Encerrar turma| RPC[supabase.rpc close_class]
+    RPC --> DG[All enrolled students demoted to viewer]
+    DG --> RO[Read-only access: ReadOnlyBanner shown, edits blocked by RLS]
+    RO --> REO{Reopen class?}
+    REO -->|Yes| RPC2[supabase.rpc reopen_class restores student role]
+    REO -->|No| KEEP[Stays as viewer, can still browse own and public content]
+```
+
+### Snapshot Preservation Flow (Cross-student durability)
+
+```mermaid
+flowchart TD
+    A1[Student A creates Principle P v1] --> A2[Marks as public]
+    A2 --> B1[Student B opens Matrix Editor]
+    B1 --> B2[Selects Principle P for a function cell]
+    B2 --> B3[Saves Concept]
+    B3 --> SNAP[selections_snapshot freezes title, description, image, color, function name of P v1]
+    SNAP --> STORE[(concepts row with snapshot jsonb)]
+    STORE --> LATER{Later: Student A edits or deletes P}
+    LATER -->|Edits to P v2| MOD[Live data diverges from snapshot]
+    LATER -->|Deletes P| DEL[Live data missing]
+    LATER -->|No change| OK[Snapshot identical to live]
+    MOD --> RES[snapshotResolver compares snapshot vs live]
+    DEL --> RES
+    OK --> RES
+    RES -->|identical| R1[Render normally, no badge]
+    RES -->|modified| R2[Render snapshot + blue badge Fonte original alterada após uso]
+    RES -->|removed| R3[Render snapshot + yellow badge Fonte original removida]
+    R2 --> SAFE[Student B's concept never breaks]
+    R3 --> SAFE
+    R1 --> SAFE
+```
+
 ### Function and Principle Management
 
 ```mermaid
