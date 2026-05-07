@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, X, Star, Loader2 } from 'lucide-react';
+import { Upload, X, Star, Loader2, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,40 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const [tagInput, setTagInput] = useState('');
   const [complexity, setComplexity] = useState(3);
   const [cost, setCost] = useState<Principle['cost']>('Médio');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleGenerateAIImage = async () => {
+    if (!title.trim()) {
+      toast.error('Informe o título do princípio antes de gerar a imagem');
+      return;
+    }
+    setIsGeneratingAI(true);
+    try {
+      const functionName = functions.find(f => f.id === functionId)?.name;
+      const { data, error } = await supabase.functions.invoke('generate-principle-image', {
+        body: { title, description, functionName },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.imageUrl) throw new Error('A IA não retornou imagem');
+
+      // Convert base64 data URL to File and upload to storage so it persists
+      const dataUrl: string = data.imageUrl;
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `ai-${Date.now()}.png`, { type: blob.type || 'image/png' });
+      const uploadedUrl = await uploadImage(file);
+      if (!uploadedUrl) throw new Error('Falha no upload da imagem gerada');
+
+      setPendingFile(null);
+      setPreviewUrl(uploadedUrl);
+      setImageUrl(uploadedUrl);
+      toast.success('Imagem gerada com IA!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao gerar imagem');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   useEffect(() => {
     if (editingPrinciple) {
@@ -248,6 +283,20 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
               className="hidden"
               onChange={handleImageSelect}
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleGenerateAIImage}
+              disabled={isGeneratingAI || isUploading || !title.trim()}
+            >
+              {isGeneratingAI ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Gerando com IA...</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
+              )}
+            </Button>
             <p className="text-xs text-muted-foreground">
               Caso não envie imagem, será exibido o título na matriz
             </p>
