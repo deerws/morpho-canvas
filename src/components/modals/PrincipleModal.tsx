@@ -283,6 +283,20 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
               className="hidden"
               onChange={handleImageSelect}
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleGenerateAIImage}
+              disabled={isGeneratingAI || isUploading || !title.trim()}
+            >
+              {isGeneratingAI ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Gerando com IA...</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
+              )}
+            </Button>
             <p className="text-xs text-muted-foreground">
               Caso não envie imagem, será exibido o título na matriz
             </p>
