@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info, Sparkles, Upload, ImageOff } from 'lucide-react';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { supabase } from '@/integrations/supabase/client';
 import { resolveSnapshot, type ResolvedSelection } from '@/lib/snapshotResolver';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,15 +35,18 @@ import {
 import { toast } from 'sonner';
 
 export default function Concepts() {
-  const { concepts, deleteConcept, isLoading: loadingConcepts } = useConcepts();
+  const { concepts, deleteConcept, updateConcept, isLoading: loadingConcepts } = useConcepts();
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, isLoading: loadingPrinciples } = usePrinciples();
   const { matrices, isLoading: loadingMatrices } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher } = useUserRole();
+  const { uploadImage, isUploading } = useImageUpload();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewConcept, setViewConcept] = useState<string | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isLoading = loadingConcepts || loadingFunctions || loadingPrinciples || loadingMatrices;
 
@@ -97,6 +102,54 @@ export default function Concepts() {
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Conceito exportado!');
+  };
+
+  const canEditConcept = (conceptId: string) => {
+    const concept = concepts.find(c => c.id === conceptId);
+    if (!concept) return false;
+    const matrix = matrices.find(m => m.id === concept.matrixId);
+    const isOwner = matrix?.userId === user?.id;
+    return (isOwner && !isReadOnly) || isTeacher;
+  };
+
+  const handleGenerateImage = async (conceptId: string) => {
+    const concept = concepts.find(c => c.id === conceptId);
+    if (!concept) return;
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-concept-image', {
+        body: {
+          conceptName: concept.name,
+          conceptDescription: concept.description || concept.name,
+          style: 'render3d',
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.imageUrl) throw new Error('Imagem não retornada pela IA');
+      updateConcept({ id: conceptId, imageUrl: data.imageUrl });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao gerar imagem');
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  const handleUploadImage = async (file: File, conceptId: string) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem deve ter no máximo 5MB');
+      return;
+    }
+    const url = await uploadImage(file, 'concepts');
+    if (url) updateConcept({ id: conceptId, imageUrl: url });
+  };
+
+  const handleRemoveImage = (conceptId: string) => {
+    updateConcept({ id: conceptId, imageUrl: null });
   };
 
   return (
@@ -289,12 +342,74 @@ export default function Concepts() {
           </DialogHeader>
           {currentViewConcept && (
             <div className="space-y-4">
-              {currentViewConcept.imageUrl && (
-                <div className="rounded-xl overflow-hidden bg-muted/40 border">
+              {currentViewConcept.imageUrl ? (
+                <div className="rounded-xl overflow-hidden bg-muted/40 border relative group">
                   <img
                     src={currentViewConcept.imageUrl}
                     alt={currentViewConcept.name}
                     className="w-full h-auto max-h-96 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed bg-muted/30 p-6 flex flex-col items-center justify-center text-center gap-2">
+                  <ImageOff className="w-8 h-8 text-muted-foreground/60" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma imagem associada a este conceito
+                  </p>
+                </div>
+              )}
+
+              {canEditConcept(currentViewConcept.id) && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateImage(currentViewConcept.id)}
+                    disabled={generatingImage || isUploading}
+                  >
+                    {generatingImage ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 mr-1" />
+                    )}
+                    {currentViewConcept.imageUrl ? 'Regerar com IA' : 'Gerar com IA'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={generatingImage || isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-1" />
+                    )}
+                    Enviar do computador
+                  </Button>
+                  {currentViewConcept.imageUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveImage(currentViewConcept.id)}
+                      disabled={generatingImage || isUploading}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1 text-destructive" />
+                      Remover imagem
+                    </Button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && currentViewConcept) {
+                        handleUploadImage(file, currentViewConcept.id);
+                      }
+                      e.target.value = '';
+                    }}
                   />
                 </div>
               )}
