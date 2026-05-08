@@ -117,7 +117,7 @@ export function useConcepts(matrixId?: string) {
   });
 
   const addConcept = useMutation({
-    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt' | 'selectionsSnapshot'>) => {
+    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt' | 'selectionsSnapshot' | 'imageUrl'> & { imageUrl?: string | null }) => {
       if (!user) throw new Error('Usuário não autenticado');
 
       const snapshot = await buildSelectionsSnapshot(concept.selections);
