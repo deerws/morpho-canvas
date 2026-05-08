@@ -45,7 +45,7 @@ interface AIConceptGeneratorModalProps {
   functions: Function[];
   principles: Principle[];
   selections: Record<string, string>;
-  onSaveConcept: (concept: { name: string; description: string; selections: Record<string, string>; generatedBy: 'ia' }) => void;
+  onSaveConcept: (concept: { name: string; description: string; selections: Record<string, string>; generatedBy: 'ia'; imageUrl: string | null }) => void;
   matrixId: string | null;
 }
 
@@ -97,7 +97,8 @@ export function AIConceptGeneratorModal({
       name: concept.name,
       description: `${concept.description}\n\n**Raciocínio:** ${concept.reasoning}\n\n**Vantagens:** ${concept.advantages.join(', ')}\n\n**Desafios:** ${concept.challenges.join(', ')}`,
       selections,
-      generatedBy: 'ia'
+      generatedBy: 'ia',
+      imageUrl: getImage(concept.id) ?? null,
     });
   };
 

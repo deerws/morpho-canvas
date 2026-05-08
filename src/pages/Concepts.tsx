@@ -169,8 +169,18 @@ export default function Concepts() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardTitle className="text-lg mb-1">{concept.name}</CardTitle>
-                  <CardDescription className="line-clamp-2 mb-3">
+                  <CardTitle className="text-lg mb-1 line-clamp-1">{concept.name}</CardTitle>
+                  {concept.imageUrl && (
+                    <div className="mb-3 rounded-lg overflow-hidden bg-muted/40 aspect-video">
+                      <img
+                        src={concept.imageUrl}
+                        alt={concept.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <CardDescription className="line-clamp-2 mb-3 break-words">
                     {concept.description || 'Sem descrição'}
                   </CardDescription>
                   
@@ -273,16 +283,27 @@ export default function Concepts() {
       </AlertDialog>
 
       <Dialog open={!!viewConcept} onOpenChange={() => setViewConcept(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{currentViewConcept?.name}</DialogTitle>
+            <DialogTitle className="break-words pr-6">{currentViewConcept?.name}</DialogTitle>
           </DialogHeader>
           {currentViewConcept && (
             <div className="space-y-4">
+              {currentViewConcept.imageUrl && (
+                <div className="rounded-xl overflow-hidden bg-muted/40 border">
+                  <img
+                    src={currentViewConcept.imageUrl}
+                    alt={currentViewConcept.name}
+                    className="w-full h-auto max-h-96 object-contain"
+                  />
+                </div>
+              )}
               {currentViewConcept.description && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">Descrição</h4>
-                  <p className="text-foreground">{currentViewConcept.description}</p>
+                  <p className="text-foreground whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {currentViewConcept.description}
+                  </p>
                 </div>
               )}
               <div>

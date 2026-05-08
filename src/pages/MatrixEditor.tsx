@@ -641,7 +641,8 @@ export default function MatrixEditor() {
               description: concept.description,
               matrixId: currentMatrixId,
               selections: concept.selections,
-              generatedBy: concept.generatedBy
+              generatedBy: concept.generatedBy,
+              imageUrl: concept.imageUrl ?? null,
             });
             setConceptSelections({});
           }

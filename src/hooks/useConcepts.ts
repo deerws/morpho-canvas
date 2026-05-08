@@ -27,6 +27,7 @@ export interface Concept {
   selectionsSnapshot: SelectionsSnapshot;
   description: string | null;
   generatedBy: 'manual' | 'ia';
+  imageUrl: string | null;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ const mapRowToConcept = (row: ConceptRow): Concept => ({
   selectionsSnapshot: (row.selections_snapshot as unknown as SelectionsSnapshot) || {},
   description: row.description,
   generatedBy: row.generated_by as Concept['generatedBy'],
+  imageUrl: (row as unknown as { image_url: string | null }).image_url ?? null,
   createdAt: row.created_at,
 });
 
@@ -115,7 +117,7 @@ export function useConcepts(matrixId?: string) {
   });
 
   const addConcept = useMutation({
-    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt' | 'selectionsSnapshot'>) => {
+    mutationFn: async (concept: Omit<Concept, 'id' | 'createdAt' | 'selectionsSnapshot' | 'imageUrl'> & { imageUrl?: string | null }) => {
       if (!user) throw new Error('Usuário não autenticado');
 
       const snapshot = await buildSelectionsSnapshot(concept.selections);
@@ -127,7 +129,8 @@ export function useConcepts(matrixId?: string) {
         selections_snapshot: snapshot as unknown as ConceptInsert['selections_snapshot'],
         description: concept.description,
         generated_by: concept.generatedBy,
-      };
+        ...(concept.imageUrl ? { image_url: concept.imageUrl } : {}),
+      } as ConceptInsert;
 
       const { data, error } = await supabase
         .from('concepts')

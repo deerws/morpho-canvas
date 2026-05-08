@@ -115,6 +115,7 @@ export type Database = {
           description: string | null
           generated_by: Database["public"]["Enums"]["concept_generated_by"]
           id: string
+          image_url: string | null
           matrix_id: string
           name: string
           selections: Json
@@ -125,6 +126,7 @@ export type Database = {
           description?: string | null
           generated_by?: Database["public"]["Enums"]["concept_generated_by"]
           id?: string
+          image_url?: string | null
           matrix_id: string
           name: string
           selections?: Json
@@ -135,6 +137,7 @@ export type Database = {
           description?: string | null
           generated_by?: Database["public"]["Enums"]["concept_generated_by"]
           id?: string
+          image_url?: string | null
           matrix_id?: string
           name?: string
           selections?: Json
