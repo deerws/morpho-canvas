@@ -27,6 +27,7 @@ export interface Concept {
   selectionsSnapshot: SelectionsSnapshot;
   description: string | null;
   generatedBy: 'manual' | 'ia';
+  imageUrl: string | null;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ const mapRowToConcept = (row: ConceptRow): Concept => ({
   selectionsSnapshot: (row.selections_snapshot as unknown as SelectionsSnapshot) || {},
   description: row.description,
   generatedBy: row.generated_by as Concept['generatedBy'],
+  imageUrl: (row as unknown as { image_url: string | null }).image_url ?? null,
   createdAt: row.created_at,
 });
 
