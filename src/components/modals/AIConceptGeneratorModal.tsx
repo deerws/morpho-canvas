@@ -97,7 +97,8 @@ export function AIConceptGeneratorModal({
       name: concept.name,
       description: `${concept.description}\n\n**Raciocínio:** ${concept.reasoning}\n\n**Vantagens:** ${concept.advantages.join(', ')}\n\n**Desafios:** ${concept.challenges.join(', ')}`,
       selections,
-      generatedBy: 'ia'
+      generatedBy: 'ia',
+      imageUrl: getImage(concept.id) ?? null,
     });
   };
 
