@@ -129,7 +129,8 @@ export function useConcepts(matrixId?: string) {
         selections_snapshot: snapshot as unknown as ConceptInsert['selections_snapshot'],
         description: concept.description,
         generated_by: concept.generatedBy,
-      };
+        ...(concept.imageUrl ? { image_url: concept.imageUrl } : {}),
+      } as ConceptInsert;
 
       const { data, error } = await supabase
         .from('concepts')
