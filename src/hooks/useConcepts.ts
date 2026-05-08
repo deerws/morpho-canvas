@@ -162,6 +162,9 @@ export function useConcepts(matrixId?: string) {
       }
       if (concept.description !== undefined) update.description = concept.description;
       if (concept.generatedBy !== undefined) update.generated_by = concept.generatedBy;
+      if (concept.imageUrl !== undefined) {
+        (update as unknown as { image_url: string | null }).image_url = concept.imageUrl;
+      }
 
       const { data, error } = await supabase
         .from('concepts')
