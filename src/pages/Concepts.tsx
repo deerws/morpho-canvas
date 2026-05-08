@@ -148,6 +148,10 @@ export default function Concepts() {
     if (url) updateConcept({ id: conceptId, imageUrl: url });
   };
 
+  const handleRemoveImage = (conceptId: string) => {
+    updateConcept({ id: conceptId, imageUrl: null });
+  };
+
   return (
     <DashboardLayout>
       <TooltipProvider>
