@@ -35,15 +35,18 @@ import {
 import { toast } from 'sonner';
 
 export default function Concepts() {
-  const { concepts, deleteConcept, isLoading: loadingConcepts } = useConcepts();
+  const { concepts, deleteConcept, updateConcept, isLoading: loadingConcepts } = useConcepts();
   const { functions, isLoading: loadingFunctions } = useFunctions();
   const { principles, isLoading: loadingPrinciples } = usePrinciples();
   const { matrices, isLoading: loadingMatrices } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher } = useUserRole();
+  const { uploadImage, isUploading } = useImageUpload();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewConcept, setViewConcept] = useState<string | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isLoading = loadingConcepts || loadingFunctions || loadingPrinciples || loadingMatrices;
 
