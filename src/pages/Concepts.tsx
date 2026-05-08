@@ -104,6 +104,50 @@ export default function Concepts() {
     toast.success('Conceito exportado!');
   };
 
+  const canEditConcept = (conceptId: string) => {
+    const concept = concepts.find(c => c.id === conceptId);
+    if (!concept) return false;
+    const matrix = matrices.find(m => m.id === concept.matrixId);
+    const isOwner = matrix?.userId === user?.id;
+    return (isOwner && !isReadOnly) || isTeacher;
+  };
+
+  const handleGenerateImage = async (conceptId: string) => {
+    const concept = concepts.find(c => c.id === conceptId);
+    if (!concept) return;
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-concept-image', {
+        body: {
+          conceptName: concept.name,
+          conceptDescription: concept.description || concept.name,
+          style: 'render3d',
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.imageUrl) throw new Error('Imagem não retornada pela IA');
+      updateConcept({ id: conceptId, imageUrl: data.imageUrl });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao gerar imagem');
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  const handleUploadImage = async (file: File, conceptId: string) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem deve ter no máximo 5MB');
+      return;
+    }
+    const url = await uploadImage(file, 'concepts');
+    if (url) updateConcept({ id: conceptId, imageUrl: url });
+  };
+
   return (
     <DashboardLayout>
       <TooltipProvider>
