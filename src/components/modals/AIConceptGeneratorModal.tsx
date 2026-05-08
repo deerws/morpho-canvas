@@ -45,7 +45,7 @@ interface AIConceptGeneratorModalProps {
   functions: Function[];
   principles: Principle[];
   selections: Record<string, string>;
-  onSaveConcept: (concept: { name: string; description: string; selections: Record<string, string>; generatedBy: 'ia' }) => void;
+  onSaveConcept: (concept: { name: string; description: string; selections: Record<string, string>; generatedBy: 'ia'; imageUrl: string | null }) => void;
   matrixId: string | null;
 }
 
