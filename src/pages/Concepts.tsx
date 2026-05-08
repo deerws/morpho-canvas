@@ -338,12 +338,74 @@ export default function Concepts() {
           </DialogHeader>
           {currentViewConcept && (
             <div className="space-y-4">
-              {currentViewConcept.imageUrl && (
-                <div className="rounded-xl overflow-hidden bg-muted/40 border">
+              {currentViewConcept.imageUrl ? (
+                <div className="rounded-xl overflow-hidden bg-muted/40 border relative group">
                   <img
                     src={currentViewConcept.imageUrl}
                     alt={currentViewConcept.name}
                     className="w-full h-auto max-h-96 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed bg-muted/30 p-6 flex flex-col items-center justify-center text-center gap-2">
+                  <ImageOff className="w-8 h-8 text-muted-foreground/60" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma imagem associada a este conceito
+                  </p>
+                </div>
+              )}
+
+              {canEditConcept(currentViewConcept.id) && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateImage(currentViewConcept.id)}
+                    disabled={generatingImage || isUploading}
+                  >
+                    {generatingImage ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 mr-1" />
+                    )}
+                    {currentViewConcept.imageUrl ? 'Regerar com IA' : 'Gerar com IA'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={generatingImage || isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-1" />
+                    )}
+                    Enviar do computador
+                  </Button>
+                  {currentViewConcept.imageUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveImage(currentViewConcept.id)}
+                      disabled={generatingImage || isUploading}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1 text-destructive" />
+                      Remover imagem
+                    </Button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && currentViewConcept) {
+                        handleUploadImage(file, currentViewConcept.id);
+                      }
+                      e.target.value = '';
+                    }}
                   />
                 </div>
               )}
