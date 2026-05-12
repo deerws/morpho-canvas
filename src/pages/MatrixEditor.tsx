@@ -422,21 +422,10 @@ export default function MatrixEditor() {
 
                 {selectedFunctions.length > 0 && availableFunctions.length > 0 && (
                   <div className="flex items-center gap-2 mt-4">
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAddFunction(e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      defaultValue=""
-                    >
-                      <option value="">+ Adicionar função existente...</option>
-                      {availableFunctions.map(f => (
-                        <option key={f.id} value={f.id}>{f.name}</option>
-                      ))}
-                    </select>
+                    <FunctionPicker
+                      functions={availableFunctions}
+                      onSelect={handleAddFunction}
+                    />
                   </div>
                 )}
               </CardContent>
