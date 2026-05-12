@@ -32,6 +32,7 @@ export default function FunctionsBank() {
   const [searchFunction, setSearchFunction] = useState('');
   const [searchPrinciple, setSearchPrinciple] = useState('');
   const [filterFunction, setFilterFunction] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [functionModalOpen, setFunctionModalOpen] = useState(false);
   const [principleModalOpen, setPrincipleModalOpen] = useState(false);
   const [editingFunction, setEditingFunction] = useState<ProductFunction | undefined>();
@@ -41,9 +42,13 @@ export default function FunctionsBank() {
   const [othersUsageCount, setOthersUsageCount] = useState<number>(0);
   const [checkingUsage, setCheckingUsage] = useState(false);
 
-  const filteredFunctions = functions.filter(f =>
-    f.name.toLowerCase().includes(searchFunction.toLowerCase())
-  );
+  const categories: ProductFunction['category'][] = ['Mecânica', 'Elétrica', 'Térmica', 'Hidráulica', 'Química', 'Outra'];
+
+  const filteredFunctions = functions.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchFunction.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || f.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const filteredPrinciples = principles.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchPrinciple.toLowerCase()) ||
@@ -140,7 +145,7 @@ export default function FunctionsBank() {
           </TabsList>
 
           <TabsContent value="functions" className="space-y-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -150,6 +155,16 @@ export default function FunctionsBank() {
                   className="pl-10"
                 />
               </div>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="all">Todas as categorias</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
               {!isViewer && (
                 <Button onClick={() => { setEditingFunction(undefined); setFunctionModalOpen(true); }}>
                   <Plus className="w-4 h-4 mr-2" />
