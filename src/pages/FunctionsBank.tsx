@@ -50,11 +50,15 @@ export default function FunctionsBank() {
     return matchesSearch && matchesCategory;
   });
 
+  const [filterPrincipleCategory, setFilterPrincipleCategory] = useState<string>('all');
+
   const filteredPrinciples = principles.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchPrinciple.toLowerCase()) ||
       p.description.toLowerCase().includes(searchPrinciple.toLowerCase());
     const matchesFilter = filterFunction === 'all' || p.functionId === filterFunction;
-    return matchesSearch && matchesFilter;
+    const func = functions.find(f => f.id === p.functionId);
+    const matchesCategory = filterPrincipleCategory === 'all' || func?.category === filterPrincipleCategory;
+    return matchesSearch && matchesFilter && matchesCategory;
   });
 
   const handleEditFunction = (func: ProductFunction) => {
