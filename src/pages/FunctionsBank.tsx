@@ -253,6 +253,16 @@ export default function FunctionsBank() {
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
               </select>
+              <select
+                value={filterPrincipleCategory}
+                onChange={(e) => setFilterPrincipleCategory(e.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="all">Todas as categorias</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
               {!isViewer && (
                 <Button onClick={() => { setEditingPrinciple(undefined); setPrincipleModalOpen(true); }}>
                   <Plus className="w-4 h-4 mr-2" />
