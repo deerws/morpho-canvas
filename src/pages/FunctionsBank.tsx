@@ -32,6 +32,7 @@ export default function FunctionsBank() {
   const [searchFunction, setSearchFunction] = useState('');
   const [searchPrinciple, setSearchPrinciple] = useState('');
   const [filterFunction, setFilterFunction] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [functionModalOpen, setFunctionModalOpen] = useState(false);
   const [principleModalOpen, setPrincipleModalOpen] = useState(false);
   const [editingFunction, setEditingFunction] = useState<ProductFunction | undefined>();
