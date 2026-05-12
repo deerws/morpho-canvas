@@ -18,6 +18,7 @@ import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
 import { AIConceptGeneratorModal } from '@/components/modals/AIConceptGeneratorModal';
+import { FunctionPicker } from '@/components/FunctionPicker';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
