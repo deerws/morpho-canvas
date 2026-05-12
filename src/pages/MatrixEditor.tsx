@@ -266,21 +266,11 @@ export default function MatrixEditor() {
                   <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                     <p className="mb-4">Adicione funções para começar a montar sua matriz</p>
                     {availableFunctions.length > 0 && (
-                      <select
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleAddFunction(e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        defaultValue=""
-                      >
-                        <option value="">+ Adicionar função...</option>
-                        {availableFunctions.map(f => (
-                          <option key={f.id} value={f.id}>{f.name}</option>
-                        ))}
-                      </select>
+                      <FunctionPicker
+                        functions={availableFunctions}
+                        onSelect={handleAddFunction}
+                        placeholder="Adicionar função..."
+                      />
                     )}
                   </div>
                 ) : (
