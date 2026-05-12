@@ -42,9 +42,13 @@ export default function FunctionsBank() {
   const [othersUsageCount, setOthersUsageCount] = useState<number>(0);
   const [checkingUsage, setCheckingUsage] = useState(false);
 
-  const filteredFunctions = functions.filter(f =>
-    f.name.toLowerCase().includes(searchFunction.toLowerCase())
-  );
+  const categories: ProductFunction['category'][] = ['Mecânica', 'Elétrica', 'Térmica', 'Hidráulica', 'Química', 'Outra'];
+
+  const filteredFunctions = functions.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchFunction.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || f.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const filteredPrinciples = principles.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchPrinciple.toLowerCase()) ||
