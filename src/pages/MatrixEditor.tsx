@@ -18,6 +18,7 @@ import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
 import { AIConceptGeneratorModal } from '@/components/modals/AIConceptGeneratorModal';
+import { FunctionPicker } from '@/components/FunctionPicker';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -265,21 +266,11 @@ export default function MatrixEditor() {
                   <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                     <p className="mb-4">Adicione funções para começar a montar sua matriz</p>
                     {availableFunctions.length > 0 && (
-                      <select
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleAddFunction(e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        defaultValue=""
-                      >
-                        <option value="">+ Adicionar função...</option>
-                        {availableFunctions.map(f => (
-                          <option key={f.id} value={f.id}>{f.name}</option>
-                        ))}
-                      </select>
+                      <FunctionPicker
+                        functions={availableFunctions}
+                        onSelect={handleAddFunction}
+                        placeholder="Adicionar função..."
+                      />
                     )}
                   </div>
                 ) : (
@@ -431,21 +422,10 @@ export default function MatrixEditor() {
 
                 {selectedFunctions.length > 0 && availableFunctions.length > 0 && (
                   <div className="flex items-center gap-2 mt-4">
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAddFunction(e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      defaultValue=""
-                    >
-                      <option value="">+ Adicionar função existente...</option>
-                      {availableFunctions.map(f => (
-                        <option key={f.id} value={f.id}>{f.name}</option>
-                      ))}
-                    </select>
+                    <FunctionPicker
+                      functions={availableFunctions}
+                      onSelect={handleAddFunction}
+                    />
                   </div>
                 )}
               </CardContent>
