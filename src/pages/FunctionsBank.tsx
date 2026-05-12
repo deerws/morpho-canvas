@@ -145,7 +145,7 @@ export default function FunctionsBank() {
           </TabsList>
 
           <TabsContent value="functions" className="space-y-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -155,6 +155,16 @@ export default function FunctionsBank() {
                   className="pl-10"
                 />
               </div>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="all">Todas as categorias</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
               {!isViewer && (
                 <Button onClick={() => { setEditingFunction(undefined); setFunctionModalOpen(true); }}>
                   <Plus className="w-4 h-4 mr-2" />
