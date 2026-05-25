@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, X, Star, Loader2, Sparkles } from 'lucide-react';
+import { Upload, X, Star, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,44 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const [complexity, setComplexity] = useState(3);
   const [cost, setCost] = useState<Principle['cost']>('Médio');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+
+  const handleAnalyzeImage = async () => {
+    if (!previewUrl) {
+      toast.error('Envie ou gere uma imagem antes de analisar');
+      return;
+    }
+    setIsAnalyzingAI(true);
+    try {
+      let imageToSend = previewUrl;
+      // If preview is a blob/object URL, convert via pendingFile to data URL
+      if (pendingFile && !previewUrl.startsWith('data:') && !previewUrl.startsWith('http')) {
+        imageToSend = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(pendingFile);
+        });
+      }
+      const functionName = functions.find(f => f.id === functionId)?.name;
+      const { data, error } = await supabase.functions.invoke('analyze-principle-image', {
+        body: { imageUrl: imageToSend, functionName },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+      if (Array.isArray(data.tags)) setTags(data.tags);
+      if (typeof data.complexity === 'number') setComplexity(Math.max(1, Math.min(5, data.complexity)));
+      if (data.cost && ['Baixo', 'Médio', 'Alto'].includes(data.cost)) setCost(data.cost);
+      toast.success('Campos preenchidos pela IA!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao analisar imagem');
+    } finally {
+      setIsAnalyzingAI(false);
+    }
+  };
 
   const handleGenerateAIImage = async () => {
     if (!title.trim()) {
@@ -295,6 +333,20 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
                 <><Loader2 className="w-4 h-4 animate-spin" /> Gerando com IA...</>
               ) : (
                 <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleAnalyzeImage}
+              disabled={isAnalyzingAI || isGeneratingAI || isUploading || !previewUrl}
+            >
+              {isAnalyzingAI ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Analisando imagem...</>
+              ) : (
+                <><Wand2 className="w-4 h-4" /> Preencher campos com IA (a partir da imagem)</>
               )}
             </Button>
             <p className="text-xs text-muted-foreground">
