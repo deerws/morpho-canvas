@@ -335,6 +335,20 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
                 <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
               )}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleAnalyzeImage}
+              disabled={isAnalyzingAI || isGeneratingAI || isUploading || !previewUrl}
+            >
+              {isAnalyzingAI ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Analisando imagem...</>
+              ) : (
+                <><Wand2 className="w-4 h-4" /> Preencher campos com IA (a partir da imagem)</>
+              )}
+            </Button>
             <p className="text-xs text-muted-foreground">
               Caso não envie imagem, será exibido o título na matriz
             </p>
