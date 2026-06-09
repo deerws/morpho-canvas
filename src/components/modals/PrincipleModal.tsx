@@ -90,7 +90,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
     try {
       const functionName = functions.find(f => f.id === functionId)?.name;
       const { data, error } = await supabase.functions.invoke('generate-principle-image', {
-        body: { title, description, functionName },
+        body: { title, description, functionName, aspectRatio },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
