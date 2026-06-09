@@ -40,12 +40,14 @@ export function ConceptSaveModal({
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('16:9');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
     setName('');
     setDescription('');
     setImageUrl(null);
+    setAspectRatio('16:9');
   };
 
   const handleGenerateImage = async () => {
@@ -60,6 +62,7 @@ export function ConceptSaveModal({
           conceptName: name,
           conceptDescription: description || name,
           style: 'render3d',
+          aspectRatio,
         },
       });
       if (error) throw new Error(error.message);
