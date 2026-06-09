@@ -171,6 +171,22 @@ export function ConceptSaveModal({
                 <p className="text-xs text-muted-foreground">Nenhuma imagem ainda</p>
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground shrink-0">Proporção:</Label>
+              <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={busy}>
+                <SelectTrigger className="h-8 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="16:9">16:9 (paisagem)</SelectItem>
+                  <SelectItem value="1:1">1:1 (quadrado)</SelectItem>
+                  <SelectItem value="4:3">4:3</SelectItem>
+                  <SelectItem value="3:2">3:2</SelectItem>
+                  <SelectItem value="9:16">9:16 (retrato)</SelectItem>
+                  <SelectItem value="3:4">3:4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -201,16 +217,28 @@ export function ConceptSaveModal({
                 Enviar do computador
               </Button>
               {imageUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setImageUrl(null)}
-                  disabled={busy}
-                >
-                  <Trash2 className="w-4 h-4 mr-1 text-destructive" />
-                  Remover
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadImage(imageUrl, name || 'conceito')}
+                    disabled={busy}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Baixar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImageUrl(null)}
+                    disabled={busy}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1 text-destructive" />
+                    Remover
+                  </Button>
+                </>
               )}
               <input
                 ref={fileInputRef}
@@ -225,6 +253,7 @@ export function ConceptSaveModal({
               />
             </div>
           </div>
+
 
           <div className="space-y-2">
             <Label>Seleções do conceito</Label>
