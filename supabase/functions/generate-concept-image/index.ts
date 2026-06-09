@@ -10,6 +10,7 @@ interface GenerateImageRequest {
   conceptName: string;
   conceptDescription: string;
   style?: 'realistic' | 'sketch' | 'render3d' | 'blueprint';
+  aspectRatio?: string;
 }
 
 function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; contentType: string } {
