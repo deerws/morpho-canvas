@@ -10,6 +10,7 @@ interface GenerateImageRequest {
   conceptName: string;
   conceptDescription: string;
   style?: 'realistic' | 'sketch' | 'render3d' | 'blueprint';
+  aspectRatio?: string;
 }
 
 function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; contentType: string } {
@@ -29,7 +30,7 @@ serve(async (req) => {
   }
 
   try {
-    const { conceptName, conceptDescription, style = 'render3d' } = await req.json() as GenerateImageRequest;
+    const { conceptName, conceptDescription, style = 'render3d', aspectRatio } = await req.json() as GenerateImageRequest;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -41,6 +42,8 @@ serve(async (req) => {
       });
     }
 
+    const ratio = ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"].includes(aspectRatio || "") ? aspectRatio : "16:9";
+
     const styleHints: Record<string, string> = {
       realistic: 'photorealistic product photography, studio lighting, white background, high detail',
       sketch: 'clean technical pencil sketch, hand-drawn industrial design concept, white paper background',
@@ -49,11 +52,11 @@ serve(async (req) => {
     };
     const styleHint = styleHints[style] || styleHints.render3d;
 
-    const prompt = `Generate an image. Industrial design product visualization of: ${conceptName}.
+    const prompt = `Generate an image with aspect ratio ${ratio}. Industrial design product visualization of: ${conceptName}.
 
 Description: ${conceptDescription}
 
-Style: ${styleHint}. The image must clearly show the product concept as a single hero subject, centered, with no text or labels visible. Focus on form, materials, and key functional features described. Return ONLY the image, no text explanation.`;
+Style: ${styleHint}. The image must clearly show the product concept as a single hero subject, centered, with no text or labels visible. Focus on form, materials, and key functional features described. The output image MUST have an aspect ratio of ${ratio}. Return ONLY the image, no text explanation.`;
 
     const callImageModel = async (model: string) => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

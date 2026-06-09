@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, X, Star, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Upload, X, Star, Loader2, Sparkles, Wand2, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { downloadImage } from '@/lib/downloadImage';
 
 interface PrincipleModalProps {
   open: boolean;
@@ -41,6 +42,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const [cost, setCost] = useState<Principle['cost']>('Médio');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('16:9');
 
   const handleAnalyzeImage = async () => {
     if (!previewUrl) {
@@ -88,7 +90,7 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
     try {
       const functionName = functions.find(f => f.id === functionId)?.name;
       const { data, error } = await supabase.functions.invoke('generate-principle-image', {
-        body: { title, description, functionName },
+        body: { title, description, functionName, aspectRatio },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -321,6 +323,22 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
               className="hidden"
               onChange={handleImageSelect}
             />
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground shrink-0">Proporção:</Label>
+              <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isGeneratingAI}>
+                <SelectTrigger className="h-8 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="16:9">16:9 (paisagem)</SelectItem>
+                  <SelectItem value="1:1">1:1 (quadrado)</SelectItem>
+                  <SelectItem value="4:3">4:3</SelectItem>
+                  <SelectItem value="3:2">3:2</SelectItem>
+                  <SelectItem value="9:16">9:16 (retrato)</SelectItem>
+                  <SelectItem value="3:4">3:4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -335,6 +353,17 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
                 <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
               )}
             </Button>
+            {previewUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => downloadImage(previewUrl, title || 'principio')}
+              >
+                <Download className="w-4 h-4" /> Baixar imagem
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
