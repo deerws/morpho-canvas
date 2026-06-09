@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Upload, Trash2, ImageOff } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Sparkles, Upload, Trash2, ImageOff, Download } from 'lucide-react';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
@@ -13,6 +14,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { downloadImage } from '@/lib/downloadImage';
 
 interface ConceptSaveModalProps {
   open: boolean;
