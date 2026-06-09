@@ -323,6 +323,22 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
               className="hidden"
               onChange={handleImageSelect}
             />
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground shrink-0">Proporção:</Label>
+              <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={isGeneratingAI}>
+                <SelectTrigger className="h-8 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="16:9">16:9 (paisagem)</SelectItem>
+                  <SelectItem value="1:1">1:1 (quadrado)</SelectItem>
+                  <SelectItem value="4:3">4:3</SelectItem>
+                  <SelectItem value="3:2">3:2</SelectItem>
+                  <SelectItem value="9:16">9:16 (retrato)</SelectItem>
+                  <SelectItem value="3:4">3:4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -337,6 +353,17 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
                 <><Sparkles className="w-4 h-4" /> Gerar imagem com IA</>
               )}
             </Button>
+            {previewUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => downloadImage(previewUrl, title || 'principio')}
+              >
+                <Download className="w-4 h-4" /> Baixar imagem
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
