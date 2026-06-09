@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const { title, description, functionName } = await req.json();
+    const { title, description, functionName, aspectRatio } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
     if (!title) {
@@ -18,12 +18,14 @@ serve(async (req) => {
       });
     }
 
-    const prompt = `Generate an image. Clean technical illustration of a design solution principle: "${title}".
+    const ratio = ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"].includes(aspectRatio) ? aspectRatio : "16:9";
+
+    const prompt = `Generate an image with aspect ratio ${ratio}. Clean technical illustration of a design solution principle: "${title}".
 
 ${description ? `Details: ${description}` : ''}
 ${functionName ? `Function: ${functionName}` : ''}
 
-Style: minimalist isometric 3D render, neutral light gray background, soft shadows, single hero subject centered, no text or labels, industrial design reference style. Focus on the mechanism/principle clearly. Return ONLY the image.`;
+Style: minimalist isometric 3D render, neutral light gray background, soft shadows, single hero subject centered, no text or labels, industrial design reference style. Focus on the mechanism/principle clearly. The output image MUST have an aspect ratio of ${ratio}. Return ONLY the image.`;
 
     const callModel = (model: string) => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
