@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, X, Star, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Upload, X, Star, Loader2, Sparkles, Wand2, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { downloadImage } from '@/lib/downloadImage';
 
 interface PrincipleModalProps {
   open: boolean;
