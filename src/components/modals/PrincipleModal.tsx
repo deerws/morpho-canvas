@@ -40,8 +40,8 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
   const [tagInput, setTagInput] = useState('');
   const [complexity, setComplexity] = useState(3);
   const [cost, setCost] = useState<Principle['cost']>('Médio');
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('16:9');
 
   const handleAnalyzeImage = async () => {
     if (!previewUrl) {
