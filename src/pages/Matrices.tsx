@@ -162,6 +162,11 @@ export default function Matrices() {
                       {matrix.description || 'Sem descrição'}
                     </CardDescription>
                   </Link>
+                  {isTeam && authorName && (
+                    <Badge variant="secondary" className="mt-2 text-xs">
+                      <Users className="w-3 h-3 mr-1" /> Equipe · {authorName}
+                    </Badge>
+                  )}
                   <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
                     <span>{matrix.functionIds.length} funções</span>
                     <div className="flex items-center gap-1">
