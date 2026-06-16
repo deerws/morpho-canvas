@@ -31,6 +31,8 @@ export default function MatrixEditor() {
   const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
   const { addConcept } = useConcepts(id === 'new' ? undefined : id);
   const { isReadOnly } = useUserRole();
+  const { user } = useAuth();
+  const { isTeammate, nameOf } = useTeammates();
 
   const isNew = id === 'new';
   const canEdit = !isReadOnly;
