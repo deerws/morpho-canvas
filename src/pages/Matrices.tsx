@@ -11,6 +11,7 @@ import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useMatrices } from '@/hooks/useMatrices';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTeammates } from '@/hooks/useTeammates';
 import {
   AlertDialog,
   AlertDialogAction,
