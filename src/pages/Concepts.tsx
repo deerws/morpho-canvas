@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info, Sparkles, Upload, ImageOff } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info, Sparkles, Upload, ImageOff, Users } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { resolveSnapshot, type ResolvedSelection } from '@/lib/snapshotResolver';
