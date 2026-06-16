@@ -51,6 +51,8 @@ export default function Management() {
           <TabsList>
             <TabsTrigger value="classes">Turmas</TabsTrigger>
             <TabsTrigger value="students">Alunos</TabsTrigger>
+            <TabsTrigger value="teams"><Users className="w-4 h-4 mr-1" />Equipes</TabsTrigger>
+            <TabsTrigger value="progress"><BarChart3 className="w-4 h-4 mr-1" />Acompanhamento</TabsTrigger>
             {isAdmin && <TabsTrigger value="teachers">Professores</TabsTrigger>}
           </TabsList>
 
@@ -72,6 +74,22 @@ export default function Management() {
               selectedClassId={selectedClassId}
               setSelectedClassId={setSelectedClassId}
               userId={user?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="teams" className="space-y-4">
+            <TeamsTab
+              classes={classes}
+              selectedClassId={selectedClassId}
+              setSelectedClassId={setSelectedClassId}
+            />
+          </TabsContent>
+
+          <TabsContent value="progress" className="space-y-4">
+            <ProgressTab
+              classes={classes}
+              selectedClassId={selectedClassId}
+              setSelectedClassId={setSelectedClassId}
             />
           </TabsContent>
 
