@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Plus, Trash2, Lock, Unlock, Mail, Upload, UserMinus, Eye, GraduationCap, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Lock, Unlock, Mail, Upload, UserMinus, Eye, GraduationCap, Loader2, Users, BarChart3, ArrowRightLeft } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useClasses } from '@/hooks/useClasses';
 import { useClassMembers } from '@/hooks/useClassMembers';
+import { useTeams } from '@/hooks/useTeams';
+import { useClassProgress } from '@/hooks/useClassProgress';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
