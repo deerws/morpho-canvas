@@ -52,18 +52,21 @@ export type Database = {
           class_id: string
           enrolled_at: string
           id: string
+          team_id: string | null
           user_id: string
         }
         Insert: {
           class_id: string
           enrolled_at?: string
           id?: string
+          team_id?: string | null
           user_id: string
         }
         Update: {
           class_id?: string
           enrolled_at?: string
           id?: string
+          team_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -72,6 +75,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_enrollments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -314,6 +324,7 @@ export type Database = {
           id: string
           invited_by: string
           status: string
+          team_id: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -323,6 +334,7 @@ export type Database = {
           id?: string
           invited_by: string
           status?: string
+          team_id?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -332,10 +344,50 @@ export type Database = {
           id?: string
           invited_by?: string
           status?: string
+          team_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "student_invitations_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+          number: number
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+          number: number
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
@@ -367,6 +419,7 @@ export type Database = {
     }
     Functions: {
       close_class: { Args: { _class_id: string }; Returns: undefined }
+      get_user_team_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -374,7 +427,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_same_active_team: {
+        Args: { _user_a: string; _user_b: string }
+        Returns: boolean
+      }
       is_teacher_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      move_student_to_team: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: undefined
+      }
       promote_to_teacher: { Args: { _user_id: string }; Returns: undefined }
       reopen_class: { Args: { _class_id: string }; Returns: undefined }
       set_student_role: {
@@ -382,6 +443,10 @@ export type Database = {
           _new_role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: undefined
+      }
+      set_team_count: {
+        Args: { _class_id: string; _count: number }
         Returns: undefined
       }
     }

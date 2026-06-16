@@ -14,6 +14,8 @@ import { useFunctions } from '@/hooks/useFunctions';
 import { usePrinciples } from '@/hooks/usePrinciples';
 import { useConcepts } from '@/hooks/useConcepts';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
+import { useTeammates } from '@/hooks/useTeammates';
 import { PrincipleModal } from '@/components/modals/PrincipleModal';
 import { PrincipleSearchModal } from '@/components/modals/PrincipleSearchModal';
 import { ConceptSaveModal } from '@/components/modals/ConceptSaveModal';
@@ -31,6 +33,8 @@ export default function MatrixEditor() {
   const { principles, incrementUsage, isLoading: loadingPrinciples } = usePrinciples();
   const { addConcept } = useConcepts(id === 'new' ? undefined : id);
   const { isReadOnly } = useUserRole();
+  const { user } = useAuth();
+  const { isTeammate, nameOf } = useTeammates();
 
   const isNew = id === 'new';
   const canEdit = !isReadOnly;
@@ -215,6 +219,14 @@ export default function MatrixEditor() {
         {isReadOnly && (
           <div className="mb-4">
             <ReadOnlyBanner />
+          </div>
+        )}
+        {existingMatrix && user && existingMatrix.userId !== user.id && isTeammate(existingMatrix.userId) && (
+          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-sm flex items-center gap-2">
+            <Info className="w-4 h-4 text-primary" />
+            <span>
+              Editando matriz de <strong>{nameOf(existingMatrix.userId) || 'colega'}</strong> — alterações ficam visíveis para toda a equipe.
+            </span>
           </div>
         )}
         <div className="flex items-center justify-between mb-4">

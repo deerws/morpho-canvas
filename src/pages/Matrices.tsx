@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Table2, Edit2, Trash2, Calendar, Loader2, ShieldAlert } from 'lucide-react';
+import { Plus, Search, Table2, Edit2, Trash2, Calendar, Loader2, ShieldAlert, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { ReadOnlyBanner } from '@/components/ReadOnlyBanner';
 import { useMatrices } from '@/hooks/useMatrices';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTeammates } from '@/hooks/useTeammates';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ export default function Matrices() {
   const { matrices, deleteMatrix, isLoading } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher, canCreate } = useUserRole();
+  const { isTeammate, nameOf } = useTeammates();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -108,9 +110,11 @@ export default function Matrices() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredMatrices.map((matrix) => {
               const isOwner = matrix.userId === user?.id;
-              const canEdit = isOwner ? !isReadOnly : isTeacher;
+              const isTeam = !isOwner && isTeammate(matrix.userId);
+              const canEdit = isOwner ? !isReadOnly : (isTeam ? !isReadOnly : isTeacher);
               const canDelete = canEdit;
-              const showModerateBadge = isTeacher && !isOwner;
+              const showModerateBadge = isTeacher && !isOwner && !isTeam;
+              const authorName = !isOwner ? nameOf(matrix.userId) : null;
               return (
               <Card key={matrix.id} className="hover:shadow-md transition-shadow group">
                 <CardHeader className="pb-2">
@@ -158,6 +162,11 @@ export default function Matrices() {
                       {matrix.description || 'Sem descrição'}
                     </CardDescription>
                   </Link>
+                  {isTeam && authorName && (
+                    <Badge variant="secondary" className="mt-2 text-xs">
+                      <Users className="w-3 h-3 mr-1" /> Equipe · {authorName}
+                    </Badge>
+                  )}
                   <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
                     <span>{matrix.functionIds.length} funções</span>
                     <div className="flex items-center gap-1">

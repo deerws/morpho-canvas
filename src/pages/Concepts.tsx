@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info, Sparkles, Upload, ImageOff } from 'lucide-react';
+import { Search, Lightbulb, Trash2, Calendar, Download, Eye, Loader2, ShieldAlert, AlertTriangle, Info, Sparkles, Upload, ImageOff, Users } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { resolveSnapshot, type ResolvedSelection } from '@/lib/snapshotResolver';
@@ -16,6 +16,7 @@ import { usePrinciples } from '@/hooks/usePrinciples';
 import { useMatrices } from '@/hooks/useMatrices';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTeammates } from '@/hooks/useTeammates';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ export default function Concepts() {
   const { matrices, isLoading: loadingMatrices } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher } = useUserRole();
+  const { isTeammate, nameOf } = useTeammates();
   const { uploadImage, isUploading } = useImageUpload();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -108,8 +110,10 @@ export default function Concepts() {
     const concept = concepts.find(c => c.id === conceptId);
     if (!concept) return false;
     const matrix = matrices.find(m => m.id === concept.matrixId);
-    const isOwner = matrix?.userId === user?.id;
-    return (isOwner && !isReadOnly) || isTeacher;
+    if (!matrix) return false;
+    const isOwner = matrix.userId === user?.id;
+    const isTeam = !isOwner && isTeammate(matrix.userId);
+    return (isOwner && !isReadOnly) || (isTeam && !isReadOnly) || isTeacher;
   };
 
   const handleGenerateImage = async (conceptId: string) => {
@@ -195,8 +199,10 @@ export default function Concepts() {
             {filteredConcepts.map((concept) => {
               const matrix = matrices.find(m => m.id === concept.matrixId);
               const isOwner = matrix?.userId === user?.id;
-              const canDelete = isOwner ? !isReadOnly : isTeacher;
-              const showModerateBadge = isTeacher && !isOwner;
+              const isTeam = !isOwner && matrix && isTeammate(matrix.userId);
+              const canDelete = isOwner ? !isReadOnly : (isTeam ? !isReadOnly : isTeacher);
+              const showModerateBadge = isTeacher && !isOwner && !isTeam;
+              const authorName = !isOwner && matrix ? nameOf(matrix.userId) : null;
               const cardResolved = resolveConcept(concept);
               const hasSourceChanges = cardResolved.some(r => r.status !== 'identical');
               return (
@@ -264,6 +270,11 @@ export default function Concepts() {
                           Algum princípio foi modificado ou removido após o uso. O conceito mantém a versão original.
                         </TooltipContent>
                       </Tooltip>
+                    )}
+                    {isTeam && authorName && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Users className="w-3 h-3 mr-1" /> Equipe · {authorName}
+                      </Badge>
                     )}
                   </div>
 
