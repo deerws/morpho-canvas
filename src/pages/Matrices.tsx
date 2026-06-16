@@ -110,9 +110,11 @@ export default function Matrices() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredMatrices.map((matrix) => {
               const isOwner = matrix.userId === user?.id;
-              const canEdit = isOwner ? !isReadOnly : isTeacher;
+              const isTeam = !isOwner && isTeammate(matrix.userId);
+              const canEdit = isOwner ? !isReadOnly : (isTeam ? !isReadOnly : isTeacher);
               const canDelete = canEdit;
-              const showModerateBadge = isTeacher && !isOwner;
+              const showModerateBadge = isTeacher && !isOwner && !isTeam;
+              const authorName = !isOwner ? nameOf(matrix.userId) : null;
               return (
               <Card key={matrix.id} className="hover:shadow-md transition-shadow group">
                 <CardHeader className="pb-2">
