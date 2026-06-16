@@ -1,162 +1,88 @@
 ## Visão geral
 
-Implementar gestão pedagógica completa do MorphoDesign com 3 papéis (Professor/Admin, Aluno matriculado, Espectador), gerenciamento de semestres (turmas), pré-cadastro de alunos por e-mail (manual ou via planilha), e regras de permissão que preservam o trabalho de outros alunos quando conteúdo de origem é editado/excluído.
+Adicionar equipes dentro de cada turma. Professor define quantas equipes existem por turma; alunos escolhem a equipe no cadastro (e podem ser realocados pelo professor). Membros da mesma equipe veem e editam todas as matrizes e conceitos uns dos outros. Professor acompanha tudo via aba e dashboard.
 
 ---
 
-## Conceitos centrais
+## Modelo de dados
 
-**Papéis (`app_role`)**
-- `admin` — Professor master. Cria/remove professores, turmas, alunos, exclui qualquer conteúdo.
-- `teacher` — Professor regular. Mesmas permissões pedagógicas do admin (gerencia suas turmas e modera conteúdo).
-- `student` — Aluno ativo numa turma. Cria/edita/exclui apenas seu próprio conteúdo.
-- `viewer` — Espectador. Só lê. Não cria, não edita, não exclui.
+**Nova tabela `teams`**
+- `id`, `class_id` (FK), `number` (int, 1..N), `name` (texto auto "Equipe N"), `created_at`. Único por (class_id, number).
 
-**Turma/Semestre**
-- Entidade nova `classes` (nome + semestre + professor responsável + status `active`/`closed`).
-- Relação `class_enrollments` (aluno ↔ turma + papel naquela turma).
-- Quando a turma é encerrada → todos os alunos viram `viewer` automaticamente. Professor também pode promover/rebaixar manualmente a qualquer momento.
+**Nova coluna em `class_enrollments`**
+- `team_id uuid` (nullable até o aluno escolher).
 
-**Pré-cadastro de alunos (`student_invitations`)**
-- Professor cadastra e-mails (um a um ou via upload `.csv`/`.xlsx`) vinculados a uma turma.
-- Tela de cadastro pública só permite criar conta se o e-mail estiver pré-autorizado.
-- Ao confirmar conta, o aluno é matriculado automaticamente na turma do convite.
+**Nova coluna em `student_invitations`**
+- `team_id uuid` (nullable; só preenche se o professor pré-alocar; caso contrário aluno escolhe).
 
-**Preservação de trabalho dos colegas (snapshot)**
-- Quando um aluno usa um princípio/função numa célula de matriz ou num conceito, o sistema grava um *snapshot* dos campos chave (título, descrição, imagem, função associada) no próprio conceito/seleção.
-- Se o autor original editar ou excluir depois, a matriz/conceito do colega continua exibindo o snapshot histórico ("daqui pra frente é assim").
-- Visualmente, mostramos um indicador discreto "fonte original modificada/removida" quando aplicável.
-
----
-
-## Master user inicial
-
-Seed:
-- E-mail: `prof.admin@admin.com`
-- Senha: `admin123`
-- Papel: `admin`
-- E-mail auto-confirmado (sem necessidade de validação).
-
-A partir dele é possível criar novos professores pela tela de gestão.
-
----
-
-## Mudanças no banco de dados
-
-**Enum `app_role`**: adicionar `viewer`. (já existe `admin`, `teacher`, `student`).
-
-**Nova tabela `classes`**
-- `id`, `name`, `semester` (ex: "2026.1"), `teacher_id` (uuid), `status` ('active'|'closed'), `created_at`, `closed_at`.
-
-**Nova tabela `class_enrollments`**
-- `id`, `class_id`, `user_id`, `enrolled_at`. Único por (class_id, user_id).
-
-**Nova tabela `student_invitations`**
-- `id`, `email` (lowercase), `class_id`, `invited_by`, `status` ('pending'|'accepted'), `created_at`, `accepted_at`. Único por (email, class_id).
-
-**Trigger `handle_new_user` (atualizado)**
-- Continua criando `profiles` e `user_roles`.
-- Adicionalmente: se existir `student_invitation` `pending` para o e-mail, cria `class_enrollment`, marca convite como `accepted` e força papel `student` (ignora qualquer `role` enviado no signup público).
-- Signup público sem convite é bloqueado por validação na borda (Edge Function ou checagem prévia).
-
-**Função `close_class(class_id)`** (security definer)
-- Atualiza `classes.status = 'closed'`, `closed_at = now()`.
-- Para cada `user_id` matriculado: rebaixa role para `viewer` (somente se o usuário não tiver outra matrícula ativa em outra turma).
-
-**Função helpers**
-- `is_class_teacher(_user_id, _class_id)` — para policies.
-- `current_active_role(_user_id)` — devolve o papel "efetivo" considerando matrículas.
-
-**Snapshots**
-- Coluna `selections_snapshot jsonb` em `concepts` (objeto `{ functionId: { principleTitle, principleDescription, principleImageUrl, functionName } }`).
-- Hooks de criação/atualização de conceitos e matrizes preenchem o snapshot a partir das versões correntes.
-- Leitura prefere o snapshot quando o registro original sumir/mudar.
+**Helpers SQL (security definer)**
+- `get_user_team(_user_id)` → `team_id` ativo do usuário.
+- `is_same_team(_user_id, _other_user_id)` → bool, true se ambos estão na mesma equipe ativa.
+- `set_team_count(_class_id, _count)` — cria/remove equipes da turma até bater no count (não exclui equipes com membros sem confirmação).
+- `move_student_to_team(_user_id, _team_id)` — apenas teacher/admin; valida que a equipe pertence à mesma turma.
 
 **RLS atualizadas**
-- `functions` / `principles` SELECT: permanece `is_public OR created_by = auth.uid()` (público por padrão, atende "tudo público + meu").
-- `functions` / `principles` UPDATE/DELETE: `created_by = auth.uid()` **e papel ≠ viewer**, OU `has_role(auth.uid(), 'teacher'|'admin')`.
-- `functions` / `principles` INSERT: `auth.uid() = created_by` **e papel ∈ (student, teacher, admin)** (viewer bloqueado).
-- `concepts` INSERT/UPDATE/DELETE: dono da matriz **e papel ≠ viewer**, OU `teacher`/`admin`.
-- `classes` / `class_enrollments` / `student_invitations`: somente `teacher`/`admin` lê e escreve; aluno só lê suas próprias matrículas.
+- `matrices`: SELECT/UPDATE/DELETE agora também permitidos quando `is_same_team(auth.uid(), user_id)`. INSERT continua dono.
+- `concepts`: idem (via matriz do colega de equipe).
+- Teacher/admin mantém acesso total.
+
+**Trigger `handle_new_user` (ajuste)**
+- Se o convite tiver `team_id`, grava `team_id` no `class_enrollments` criado.
+- Senão, deixa `team_id` nulo; front pede escolha no cadastro.
 
 ---
 
-## Mudanças no front-end
+## Front-end
 
-**Auth**
-- `Register.tsx`: remover seletor "Tipo de usuário". Antes do `signUp`, chamar Edge Function `validate-invitation` que confirma se o e-mail está em `student_invitations` (status pending). Se não estiver → erro "E-mail não autorizado pelo professor".
-- `useUserRole`: estender para retornar `isViewer`, `activeClass`, `isReadOnly` (true quando viewer).
+**Cadastro (`Register.tsx`)**
+- Após validar convite, chamar nova edge function `list-class-teams` (recebe email, devolve `{ classId, teams: [{id, name, number, memberCount}] }`).
+- Se o convite já tem `team_id`, pula a etapa.
+- Senão, mostra select obrigatório "Escolha sua equipe" antes do `signUp`. Equipe escolhida vai em `raw_user_meta_data.team_id` e o trigger usa esse valor (fallback do convite).
 
-**Nova página `Gestão` (apenas teacher/admin)** — `/management`
-Acessível pelo sidebar. Três abas:
+**Gestão → nova aba "Equipes"**
+- Seleciona turma → mostra:
+  - Input "Número de equipes" + botão Aplicar → chama `set_team_count`.
+  - Lista de equipes em cards: nome, contagem de membros, lista de alunos com botão "Mover" (popover com selector de equipes da turma).
+  - Linha "Sem equipe" com alunos pendentes para realocar.
 
-1. **Turmas**
-   - Lista de turmas (nome, semestre, status, nº alunos).
-   - Botão "Nova turma" (nome + semestre).
-   - Ações por turma: ver alunos, encerrar (confirma e dispara `close_class`), reabrir.
+**Gestão → nova aba "Acompanhamento" (dashboard)**
+- Seleciona turma → tabela por aluno: nome, equipe, nº matrizes, nº conceitos, último acesso (do `profiles` se disponível, senão `updated_at` da última matriz). Agregado por equipe no topo (totais + médias).
 
-2. **Alunos**
-   - Selecionar turma → lista alunos matriculados + convites pendentes.
-   - Botões: "Adicionar e-mail", "Importar planilha" (.csv/.xlsx; coluna `email`), "Remover aluno", "Promover a viewer / restaurar a aluno".
-   - Importação: parse no client com SheetJS, validação Zod, envio em lote.
-
-3. **Professores** (somente admin)
-   - Listar usuários com papel `teacher`/`admin`.
-   - "Adicionar professor" (envia convite especial; ao aceitar vira `teacher`).
-   - "Remover papel de professor".
-
-**Sidebar**
-- Item "Gestão" só aparece para `teacher`/`admin`.
-
-**Aplicação das permissões na UI**
-- `FunctionsBank.tsx`, `Concepts.tsx`, `Matrices.tsx`, `MatrixEditor.tsx`: ocultar/desabilitar botões de criar/editar/excluir quando `isReadOnly` (viewer). Tooltip explicando "Modo somente leitura — semestre encerrado".
-- Botões de exclusão de função/princípio ganham aviso: "X conceitos de outros alunos usam este item — eles continuarão funcionando com a versão atual em snapshot".
-
-**Snapshots em conceitos**
-- `useConcepts` ao salvar inclui `selections_snapshot` derivado do estado atual de funções/princípios.
-- Ao renderizar um conceito antigo, comparar snapshot vs. dados atuais; se divergente, badge "Fonte original alterada".
-
-**Indicação visual de papel**
-- Sidebar footer: badge colorido ao lado do nome (Professor / Aluno / Espectador / Admin).
+**Sidebar / contexto do aluno**
+- `useUserRole` ganha `teamId` e `teammateIds`.
+- Em `Matrices.tsx`: além das "minhas matrizes", listar seção "Matrizes da equipe" com badge do autor. Mesma listagem em `Concepts.tsx`.
+- `MatrixEditor.tsx`: se a matriz é de colega de equipe, libera edição e exibe banner discreto "Matriz de {nome} — equipe {N}".
+- Viewer continua somente leitura (regra de role tem prioridade).
 
 ---
 
-## Master user — como semear
+## Edge functions
 
-Migração SQL que:
-1. Insere usuário em `auth.users` via função admin (e-mail confirmado).
-2. Insere `profiles` e `user_roles` (`admin`).
-3. Idempotente (não duplica se já existir).
-
-Após o primeiro login, recomendamos trocar a senha em **Configurações**.
+- **`list-class-teams`** (público com service role): valida email convidado, retorna equipes da turma do convite + contagens.
+- Atualizar **`validate-invitation`** para devolver também `requiresTeamSelection: boolean` e `teamId` quando pré-alocado.
 
 ---
 
 ## Detalhes técnicos
 
-- **Importação de planilha**: usar `xlsx` (SheetJS) no client. Aceitar `.xlsx` e `.csv`. Coluna obrigatória: `email`. Coluna opcional: `name`. Validar com Zod (max 500 e-mails por upload).
-- **Edge Function `validate-invitation`**: pública, recebe `email`, retorna `{ valid: boolean, classId?: string }`. Usa `service_role` para consultar `student_invitations` sem expor a tabela ao anon.
-- **Edge Function `create-teacher`** (admin only): valida JWT do chamador, confere `admin`, insere usuário e atribui role `teacher`.
-- **Snapshots**: `selections_snapshot` é uma cópia dos campos no momento da gravação. Migração de dados existentes preenche snapshot com o estado atual dos princípios referenciados.
-- **Rebaixamento automático**: trigger em `classes` (AFTER UPDATE quando `status` muda para `closed`) chama `close_class()`.
-- **Promoção manual**: endpoint via mutation que atualiza `user_roles.role` (apenas teacher/admin via RLS).
-- **Auth settings**: manter auto-confirmação de e-mail ativada (já está no projeto) para fluxo simples de aluno via convite.
+- Equipes são auto-nomeadas `Equipe N`. Se o professor reduzir a quantidade, equipes com membros são bloqueadas (RAISE EXCEPTION explicando que precisa esvaziar antes).
+- `is_same_team` usa apenas matrículas em turmas com `status='active'` para não vazar acesso após encerramento.
+- Hooks novos: `useTeams(classId)`, `useTeammates()`, `useClassProgress(classId)`.
+- React Query: invalidar `['matrices']`/`['concepts']` quando `team_id` do aluno muda.
+- Sem alteração de cores/identidade visual.
 
 ---
 
 ## Entregáveis
 
-1. Migração SQL: enum `viewer`, tabelas `classes`/`class_enrollments`/`student_invitations`, trigger atualizado, função `close_class`, RLS revistas, coluna `selections_snapshot`, seed do master user.
-2. Edge Functions: `validate-invitation`, `create-teacher`.
-3. Hooks novos: `useClasses`, `useEnrollments`, `useInvitations`.
-4. Páginas/componentes: `/management` (3 abas), modais (NewClass, AddStudents, ImportSpreadsheet, AddTeacher).
-5. Atualizações: `Register.tsx`, `useUserRole.ts`, `AppSidebar.tsx`, `FunctionsBank.tsx`, `Concepts.tsx`, `MatrixEditor.tsx`, `Matrices.tsx`, `useConcepts.ts` (snapshots).
-6. Atualização do `mem://autenticacao/niveis-acesso` e do README com diagrama do novo fluxo.
+1. Migração: tabela `teams`, colunas `team_id`, RLS revisadas, funções helpers, trigger atualizado.
+2. Edge functions: `list-class-teams`, atualização de `validate-invitation`.
+3. Hooks: `useTeams`, `useTeammates`, `useClassProgress`.
+4. UI: aba "Equipes" e "Acompanhamento" em `/management`; ajustes em `Register.tsx`, `Matrices.tsx`, `Concepts.tsx`, `MatrixEditor.tsx`, `useUserRole.ts`.
+5. Atualização das memórias de RBAC e do README com diagrama do fluxo de equipes.
 
----
+## Fora do escopo agora
 
-## O que NÃO entra agora
-
-- Notificações por e-mail para convites (apenas marca convite como pending; aluno descobre que pode se cadastrar fora do app).
-- Dashboard de métricas pedagógicas por turma (pode vir num próximo ciclo).
-- Histórico/auditoria de moderação (quem excluiu o quê).
+- Chat/comentários dentro da equipe.
+- Histórico de quem editou o quê (auditoria).
+- Notificação por e-mail quando o professor realoca o aluno.
