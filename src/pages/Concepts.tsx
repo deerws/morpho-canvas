@@ -199,8 +199,10 @@ export default function Concepts() {
             {filteredConcepts.map((concept) => {
               const matrix = matrices.find(m => m.id === concept.matrixId);
               const isOwner = matrix?.userId === user?.id;
-              const canDelete = isOwner ? !isReadOnly : isTeacher;
-              const showModerateBadge = isTeacher && !isOwner;
+              const isTeam = !isOwner && matrix && isTeammate(matrix.userId);
+              const canDelete = isOwner ? !isReadOnly : (isTeam ? !isReadOnly : isTeacher);
+              const showModerateBadge = isTeacher && !isOwner && !isTeam;
+              const authorName = !isOwner && matrix ? nameOf(matrix.userId) : null;
               const cardResolved = resolveConcept(concept);
               const hasSourceChanges = cardResolved.some(r => r.status !== 'identical');
               return (
