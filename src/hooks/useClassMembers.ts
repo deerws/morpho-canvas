@@ -11,7 +11,7 @@ export function useClassMembers(classId: string | null) {
       if (!classId) return [];
       const { data: rows, error } = await supabase
         .from('class_enrollments')
-        .select('id, user_id, enrolled_at')
+        .select('id, user_id, enrolled_at, team_id')
         .eq('class_id', classId);
       if (error) throw error;
 
@@ -32,6 +32,7 @@ export function useClassMembers(classId: string | null) {
           name: p?.name || p?.email || '—',
           email: p?.email || '',
           role,
+          teamId: r.team_id as string | null,
           enrolledAt: r.enrolled_at,
         };
       });
@@ -55,11 +56,12 @@ export function useClassMembers(classId: string | null) {
   });
 
   const addInvitations = useMutation({
-    mutationFn: async (params: { emails: string[]; classId: string; invitedBy: string }) => {
+    mutationFn: async (params: { emails: string[]; classId: string; invitedBy: string; teamId?: string | null }) => {
       const rows = params.emails.map((email) => ({
         email: email.toLowerCase().trim(),
         class_id: params.classId,
         invited_by: params.invitedBy,
+        ...(params.teamId ? { team_id: params.teamId } : {}),
       }));
       const { error } = await supabase
         .from('student_invitations')
