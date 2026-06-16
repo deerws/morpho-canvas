@@ -443,3 +443,215 @@ function TeachersTab() {
     </>
   );
 }
+
+function ClassPicker({ classes, selectedClassId, setSelectedClassId }: any) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Label className="text-sm">Turma:</Label>
+      <select
+        className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        value={selectedClassId || ''}
+        onChange={(e) => setSelectedClassId(e.target.value || null)}
+      >
+        <option value="">Selecione…</option>
+        {classes.map((c: any) => (
+          <option key={c.id} value={c.id}>{c.name} — {c.semester}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function TeamsTab({ classes, selectedClassId, setSelectedClassId }: any) {
+  const { teams, isLoading, setTeamCount, moveStudent } = useTeams(selectedClassId);
+  const { members } = useClassMembers(selectedClassId);
+  const [countInput, setCountInput] = useState<string>('');
+
+  const handleApply = () => {
+    const n = parseInt(countInput, 10);
+    if (Number.isNaN(n) || n < 0) return toast.error('Digite um número válido');
+    if (!selectedClassId) return;
+    setTeamCount({ classId: selectedClassId, count: n });
+    setCountInput('');
+  };
+
+  const unassigned = members.filter((m: any) => !m.teamId);
+
+  return (
+    <div className="space-y-4">
+      <ClassPicker classes={classes} selectedClassId={selectedClassId} setSelectedClassId={setSelectedClassId} />
+
+      {!selectedClassId ? (
+        <Card className="py-12"><div className="text-center text-muted-foreground">Selecione uma turma</div></Card>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Quantidade de equipes</CardTitle>
+              <CardDescription>
+                Atual: {teams.length}. Aumentar adiciona equipes "Equipe N". Diminuir só funciona se as últimas estiverem vazias.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex gap-2 items-end">
+              <div className="space-y-1">
+                <Label>Nova quantidade</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={200}
+                  value={countInput}
+                  onChange={(e) => setCountInput(e.target.value)}
+                  className="w-32"
+                  placeholder={String(teams.length)}
+                />
+              </div>
+              <Button onClick={handleApply}>Aplicar</Button>
+            </CardContent>
+          </Card>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {teams.map((team: any) => {
+                const teamMembers = members.filter((m: any) => m.teamId === team.id);
+                return (
+                  <Card key={team.id}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <span>{team.name}</span>
+                        <Badge variant="secondary">{teamMembers.length} membro(s)</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {teamMembers.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sem membros.</p>
+                      ) : teamMembers.map((m: any) => (
+                        <MemberRow key={m.userId} member={m} teams={teams} onMove={(tid) => moveStudent({ userId: m.userId, teamId: tid })} />
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {unassigned.length > 0 && (
+                <Card className="md:col-span-2 border-dashed">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Sem equipe ({unassigned.length})</CardTitle>
+                    <CardDescription>Alunos matriculados que ainda não estão em nenhuma equipe.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {unassigned.map((m: any) => (
+                      <MemberRow key={m.userId} member={m} teams={teams} onMove={(tid) => moveStudent({ userId: m.userId, teamId: tid })} />
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function MemberRow({ member, teams, onMove }: any) {
+  return (
+    <div className="flex items-center justify-between border border-border rounded-md p-2">
+      <div className="min-w-0">
+        <p className="text-sm font-medium truncate">{member.name}</p>
+        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <ArrowRightLeft className="w-3 h-3 text-muted-foreground" />
+        <Select value={member.teamId || 'none'} onValueChange={(v) => onMove(v === 'none' ? null : v)}>
+          <SelectTrigger className="h-8 w-40 text-xs"><SelectValue placeholder="Equipe" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Sem equipe</SelectItem>
+            {teams.map((t: any) => (
+              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
+function ProgressTab({ classes, selectedClassId, setSelectedClassId }: any) {
+  const { data: rows = [], isLoading } = useClassProgress(selectedClassId);
+
+  const grouped: Record<string, { name: string; students: typeof rows }> = {};
+  for (const r of rows) {
+    const key = r.teamId || 'none';
+    const label = r.teamName || 'Sem equipe';
+    if (!grouped[key]) grouped[key] = { name: label, students: [] };
+    grouped[key].students.push(r);
+  }
+
+  const formatDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+
+  return (
+    <div className="space-y-4">
+      <ClassPicker classes={classes} selectedClassId={selectedClassId} setSelectedClassId={setSelectedClassId} />
+
+      {!selectedClassId ? (
+        <Card className="py-12"><div className="text-center text-muted-foreground">Selecione uma turma</div></Card>
+      ) : isLoading ? (
+        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+      ) : rows.length === 0 ? (
+        <Card className="py-12"><div className="text-center text-muted-foreground">Sem alunos matriculados.</div></Card>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(grouped).map(([key, g]) => {
+            const totalM = g.students.reduce((a, s) => a + s.matricesCount, 0);
+            const totalC = g.students.reduce((a, s) => a + s.conceptsCount, 0);
+            return (
+              <Card key={key}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <span>{g.name}</span>
+                    <div className="flex gap-2 text-xs">
+                      <Badge variant="secondary">{g.students.length} aluno(s)</Badge>
+                      <Badge variant="outline">{totalM} matrizes</Badge>
+                      <Badge variant="outline">{totalC} conceitos</Badge>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left text-xs text-muted-foreground">
+                          <th className="py-2 px-2 font-medium">Aluno</th>
+                          <th className="py-2 px-2 font-medium text-center">Matrizes</th>
+                          <th className="py-2 px-2 font-medium text-center">Conceitos</th>
+                          <th className="py-2 px-2 font-medium">Última atividade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {g.students.map((s) => (
+                          <tr key={s.userId} className="border-b last:border-0">
+                            <td className="py-2 px-2">
+                              <div className="font-medium">{s.name}</div>
+                              <div className="text-xs text-muted-foreground">{s.email}</div>
+                            </td>
+                            <td className="py-2 px-2 text-center">{s.matricesCount}</td>
+                            <td className="py-2 px-2 text-center">{s.conceptsCount}</td>
+                            <td className="py-2 px-2 text-xs text-muted-foreground">{formatDate(s.lastActivity)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
