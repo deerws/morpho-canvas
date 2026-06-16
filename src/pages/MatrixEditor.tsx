@@ -221,6 +221,14 @@ export default function MatrixEditor() {
             <ReadOnlyBanner />
           </div>
         )}
+        {existingMatrix && user && existingMatrix.userId !== user.id && isTeammate(existingMatrix.userId) && (
+          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-sm flex items-center gap-2">
+            <Info className="w-4 h-4 text-primary" />
+            <span>
+              Editando matriz de <strong>{nameOf(existingMatrix.userId) || 'colega'}</strong> — alterações ficam visíveis para toda a equipe.
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <Input
