@@ -110,8 +110,10 @@ export default function Concepts() {
     const concept = concepts.find(c => c.id === conceptId);
     if (!concept) return false;
     const matrix = matrices.find(m => m.id === concept.matrixId);
-    const isOwner = matrix?.userId === user?.id;
-    return (isOwner && !isReadOnly) || isTeacher;
+    if (!matrix) return false;
+    const isOwner = matrix.userId === user?.id;
+    const isTeam = !isOwner && isTeammate(matrix.userId);
+    return (isOwner && !isReadOnly) || (isTeam && !isReadOnly) || isTeacher;
   };
 
   const handleGenerateImage = async (conceptId: string) => {
