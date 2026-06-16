@@ -271,6 +271,11 @@ export default function Concepts() {
                         </TooltipContent>
                       </Tooltip>
                     )}
+                    {isTeam && authorName && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Users className="w-3 h-3 mr-1" /> Equipe · {authorName}
+                      </Badge>
+                    )}
                   </div>
 
 
