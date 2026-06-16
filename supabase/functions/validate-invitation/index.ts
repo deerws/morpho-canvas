@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verificar se é o e-mail master ou se há convite pendente
     const masterEmail = "prof.admin@admin.com";
     if (email.toLowerCase() === masterEmail) {
       return new Response(JSON.stringify({ valid: true, role: "admin" }), {
@@ -34,7 +33,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await admin
       .from("student_invitations")
-      .select("id, class_id, status")
+      .select("id, class_id, team_id, status")
       .ilike("email", email)
       .eq("status", "pending")
       .maybeSingle();
@@ -42,9 +41,26 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     if (data) {
-      return new Response(JSON.stringify({ valid: true, classId: data.class_id, role: "student" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      let teams: Array<{ id: string; name: string; number: number }> = [];
+      if (!data.team_id) {
+        const { data: t } = await admin
+          .from("teams")
+          .select("id, name, number")
+          .eq("class_id", data.class_id)
+          .order("number");
+        teams = t || [];
+      }
+      return new Response(
+        JSON.stringify({
+          valid: true,
+          classId: data.class_id,
+          teamId: data.team_id,
+          requiresTeamSelection: !data.team_id && teams.length > 0,
+          teams,
+          role: "student",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(

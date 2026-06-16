@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Table2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Table2, Mail, Lock, User, Eye, EyeOff, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -20,6 +21,8 @@ const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+type TeamOpt = { id: string; name: string; number: number };
+
 export default function Register() {
   const navigate = useNavigate();
   const { signUp, user, loading } = useAuth();
@@ -29,6 +32,9 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [teams, setTeams] = useState<TeamOpt[]>([]);
+  const [teamId, setTeamId] = useState<string>('');
+  const [requiresTeam, setRequiresTeam] = useState(false);
 
   useEffect(() => {
     if (user && !loading) navigate('/dashboard', { replace: true });
@@ -45,25 +51,35 @@ export default function Register() {
 
     setIsLoading(true);
 
-    // Validar convite via edge function
+    let resolvedTeamId: string | null = teamId || null;
+
     try {
-      const { data: validation, error: invErr } = await supabase.functions.invoke(
+      const { data: inv, error: invErr } = await supabase.functions.invoke(
         'validate-invitation',
         { body: { email } }
       );
       if (invErr) throw invErr;
-      if (!validation?.valid) {
-        toast.error(validation?.error || 'E-mail não autorizado pelo professor.');
+      if (!inv?.valid) {
+        toast.error(inv?.error || 'E-mail não autorizado pelo professor.');
         setIsLoading(false);
         return;
       }
+      // First click: fetch teams and ask for selection before creating account
+      if (inv.requiresTeamSelection && !teamId) {
+        setTeams(inv.teams || []);
+        setRequiresTeam(true);
+        toast.info('Escolha sua equipe para continuar.');
+        setIsLoading(false);
+        return;
+      }
+      if (inv.teamId) resolvedTeamId = inv.teamId;
     } catch {
       toast.error('Não foi possível validar seu e-mail. Tente novamente.');
       setIsLoading(false);
       return;
     }
 
-    const { error } = await signUp(email, password, name, 'student');
+    const { error } = await signUp(email, password, name, 'student', { teamId: resolvedTeamId });
 
     if (error) {
       if (error.message.includes('User already registered')) {
@@ -111,7 +127,7 @@ export default function Register() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
+                <Input id="email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setRequiresTeam(false); setTeams([]); setTeamId(''); }} className="pl-10" required />
               </div>
             </div>
             <div className="space-y-2">
@@ -131,8 +147,31 @@ export default function Register() {
                 <Input id="confirmPassword" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10" required />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 'Criar conta'}
+
+            {requiresTeam && (
+              <div className="space-y-2">
+                <Label>Equipe</Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                  <Select value={teamId} onValueChange={setTeamId}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Escolha sua equipe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O professor pode realocar você posteriormente.
+                </p>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading || (requiresTeam && !teamId)}>
+              {isLoading ? 'Criando conta...' : requiresTeam ? 'Confirmar e criar conta' : 'Criar conta'}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">
