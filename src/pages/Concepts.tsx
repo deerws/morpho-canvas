@@ -42,6 +42,7 @@ export default function Concepts() {
   const { matrices, isLoading: loadingMatrices } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher } = useUserRole();
+  const { isTeammate, nameOf } = useTeammates();
   const { uploadImage, isUploading } = useImageUpload();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
