@@ -27,6 +27,7 @@ export default function Matrices() {
   const { matrices, deleteMatrix, isLoading } = useMatrices();
   const { user } = useAuth();
   const { isReadOnly, isTeacher, canCreate } = useUserRole();
+  const { isTeammate, nameOf } = useTeammates();
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
