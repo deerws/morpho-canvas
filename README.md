@@ -8,6 +8,8 @@ An educational web platform for product design students and professors to create
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-teal)
 ![Supabase](https://img.shields.io/badge/Supabase-Backend-green)
 
+**Live at:** [morpho-canvas.sites.ufsc.br](https://morpho-canvas.sites.ufsc.br/)
+
 ## 📋 Table of Contents
 
 - [About the Project](#-about-the-project)
@@ -15,6 +17,7 @@ An educational web platform for product design students and professors to create
 - [Technologies Used](#-technologies-used)
 - [Architecture](#-architecture)
 - [Installation](#-installation)
+- [Deployment](#-deployment)
 - [Folder Structure](#-folder-structure)
 - [Database](#-database)
 - [AI Concept Generation](#-ai-concept-generation)
@@ -126,181 +129,9 @@ MorphoDesign Platform was developed to:
 |------------|-------------|
 | **Google Gemini 1.5 Flash** | Language model for concept generation |
 
-## 🔄 User Flows
-
-### Creating a Morphological Matrix
-
-```mermaid
-flowchart TD
-    A[Login] --> B[Dashboard]
-    B --> C[Click 'New Matrix']
-    C --> D[Enter name and description]
-    D --> E[Save Matrix]
-    E --> F[Matrix Editor]
-    F --> G{Add Functions}
-    G -->|From Bank| H[Select existing functions]
-    G -->|New| I[Create custom function]
-    H --> J[Functions added to matrix]
-    I --> J
-    J --> K{Add Principles}
-    K -->|From Bank| L[Search and select principles]
-    K -->|New| M[Create custom principle]
-    L --> N[Principles appear in grid]
-    M --> N
-    N --> O[Select one principle per function]
-    O --> P{Generate Concepts?}
-    P -->|Manual| Q[Save concept manually]
-    P -->|AI| R[Open AI Generator]
-    Q --> S[Concept saved]
-    R --> S
-```
-
-### AI Concept Generation Flow
-
-```mermaid
-flowchart TD
-    A[Open AI Generator Modal] --> B[Configure Parameters]
-    B --> B1[Set creativity level 0.1-1.0]
-    B --> B2[Choose focus: Innovation / Feasibility / Cost]
-    B --> B3[Set number of concepts 1-5]
-    B1 & B2 & B3 --> C[Click 'Generate Concepts']
-    C --> D{Check Cache}
-    D -->|Cache Hit| E[Return cached concepts]
-    D -->|Cache Miss| F[Send to Edge Function]
-    F --> G[Edge Function calls Google Gemini API]
-    G --> H[Parse AI response]
-    H --> I[Save to cache]
-    I --> J[Display generated concepts]
-    E --> J
-    J --> K[Review concepts]
-    K --> L{User Action}
-    L -->|👍 Like| M[Positive feedback]
-    L -->|👎 Dislike| N[Negative feedback]
-    L -->|💾 Save| O[Save concept to matrix]
-    L -->|🔄 Regenerate| C
-```
-
-### User Registration and Authentication
-
-```mermaid
-flowchart TD
-    A[Access Platform] --> B{Has Account?}
-    B -->|No| C[Register Page]
-    C --> D[Enter name, email, password]
-    D --> E[Submit registration]
-    E --> F[Verify email]
-    F --> G[Login Page]
-    B -->|Yes| G
-    G --> H[Enter email and password]
-    H --> I{Credentials valid?}
-    I -->|No| J[Show error message]
-    J --> G
-    I -->|Yes| K[Redirect to Dashboard]
-    K --> L[Access all features]
-```
-
-### Class Lifecycle (Teacher → Student → Viewer)
-
-```mermaid
-flowchart TD
-    T[Professor logs in] --> C[Creates new class with semester]
-    C --> E[Adds student emails individual or spreadsheet]
-    E --> I[Invitations stored as pending]
-    I --> S[Student accesses /register]
-    S --> V{validate-invitation finds pending invite?}
-    V -->|No| X[Signup blocked]
-    V -->|Yes| R[Signup completes]
-    R --> A[Trigger auto-enrolls student in class]
-    A --> RS[Role student assigned]
-    RS --> W[Student creates functions, principles, matrices, concepts]
-    W --> END{Semester ends}
-    END -->|Teacher clicks Encerrar turma| RPC[supabase.rpc close_class]
-    RPC --> DG[All enrolled students demoted to viewer]
-    DG --> RO[Read-only access: ReadOnlyBanner shown, edits blocked by RLS]
-    RO --> REO{Reopen class?}
-    REO -->|Yes| RPC2[supabase.rpc reopen_class restores student role]
-    REO -->|No| KEEP[Stays as viewer, can still browse own and public content]
-```
-
-### Snapshot Preservation Flow (Cross-student durability)
-
-```mermaid
-flowchart TD
-    A1[Student A creates Principle P v1] --> A2[Marks as public]
-    A2 --> B1[Student B opens Matrix Editor]
-    B1 --> B2[Selects Principle P for a function cell]
-    B2 --> B3[Saves Concept]
-    B3 --> SNAP[selections_snapshot freezes title, description, image, color, function name of P v1]
-    SNAP --> STORE[(concepts row with snapshot jsonb)]
-    STORE --> LATER{Later: Student A edits or deletes P}
-    LATER -->|Edits to P v2| MOD[Live data diverges from snapshot]
-    LATER -->|Deletes P| DEL[Live data missing]
-    LATER -->|No change| OK[Snapshot identical to live]
-    MOD --> RES[snapshotResolver compares snapshot vs live]
-    DEL --> RES
-    OK --> RES
-    RES -->|identical| R1[Render normally, no badge]
-    RES -->|modified| R2[Render snapshot + blue badge Fonte original alterada após uso]
-    RES -->|removed| R3[Render snapshot + yellow badge Fonte original removida]
-    R2 --> SAFE[Student B's concept never breaks]
-    R3 --> SAFE
-    R1 --> SAFE
-```
-
-### Function and Principle Management
-
-```mermaid
-flowchart TD
-    A[Function Bank Page] --> B{Action}
-    B -->|View| C[Browse functions by category]
-    C --> D[Expand to see principles]
-    B -->|Create| E[Open Function Modal]
-    E --> F[Enter name, category, color]
-    F --> G[Save Function]
-    G --> H[Function created]
-    H --> I{Add Principles?}
-    I -->|Yes| J[Open Principle Modal]
-    J --> K[Enter title, description, image]
-    K --> L[Set complexity & cost]
-    L --> M[Add tags]
-    M --> N[Save Principle]
-    N --> O[Principle linked to function]
-    I -->|No| P[Done]
-    B -->|Search| Q[Use search and filters]
-    Q --> R[Filter by category, tags, cost]
-    R --> S[View filtered results]
-```
-
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend                              │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────────┐ │
-│  │  React  │  │ Router  │  │  Query  │  │  Zustand Store  │ │
-│  └────┬────┘  └────┬────┘  └────┬────┘  └────────┬────────┘ │
-│       │            │            │                 │          │
-│       └────────────┴────────────┴─────────────────┘          │
-│                            │                                 │
-└────────────────────────────┼─────────────────────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  Supabase SDK   │
-                    └────────┬────────┘
-                             │
-┌────────────────────────────┼─────────────────────────────────┐
-│                      Backend (Supabase)                      │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────────┐ │
-│  │  Auth   │  │PostgreSQL│  │ Storage │  │ Edge Functions  │ │
-│  └─────────┘  └─────────┘  └─────────┘  └────────┬────────┘ │
-│                                                   │          │
-└───────────────────────────────────────────────────┼──────────┘
-                                                    │
-                                           ┌────────▼────────┐
-                                           │  Google Gemini  │
-                                           │     API         │
-                                           └─────────────────┘
-```
+The frontend (React + Router + React Query + Zustand) talks to Supabase (Auth, PostgreSQL, Storage, Edge Functions) through the Supabase SDK. The AI concept generation Edge Function calls the Google Gemini API and caches results in the database.
 
 ## 🚀 Installation
 
@@ -346,6 +177,17 @@ bun run dev
 ```
 http://localhost:5173
 ```
+
+## 🚢 Deployment
+
+The app is built into a static bundle (Vite) and served by Nginx inside a Docker container (see [Dockerfile](Dockerfile)). Since `VITE_*` variables are inlined at build time, they must be passed as Docker build args, not runtime env vars.
+
+**Production**: hosted at UFSC (`morpho-canvas.sites.ufsc.br`) via Portainer, deployed through GitLab CI/CD ([.gitlab-ci.yml](.gitlab-ci.yml)):
+
+1. `build` stage — builds the Docker image with the `VITE_SUPABASE_*` build args (configured as CI/CD variables in the GitLab project) and pushes it to the container registry.
+2. `portainer` stage — calls a Portainer webhook (`WEBHOOK_PORTAINER` CI/CD variable) to redeploy the stack with the new image.
+
+Both stages run only on `main`/`master`.
 
 ## 📁 Folder Structure
 
@@ -413,52 +255,15 @@ morpho-canvas/
 
 ## 🗄️ Database
 
-### ER Diagram
+### Main Tables
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│    profiles     │     │    functions    │     │   principles    │
-├─────────────────┤     ├─────────────────┤     ├─────────────────┤
-│ id (PK)         │     │ id (PK)         │◄────│ function_id(FK) │
-│ user_id         │     │ name            │     │ id (PK)         │
-│ name            │     │ description     │     │ title           │
-│ email           │     │ category        │     │ description     │
-│ avatar_url      │     │ color           │     │ image_url       │
-│ created_at      │     │ is_public       │     │ complexity      │
-│ updated_at      │     │ created_by      │     │ cost            │
-└─────────────────┘     │ created_at      │     │ tags            │
-                        │ updated_at      │     │ is_public       │
-┌─────────────────┐     └─────────────────┘     │ created_by      │
-│   user_roles    │                             │ usage_count     │
-├─────────────────┤                             │ created_at      │
-│ id (PK)         │                             │ updated_at      │
-│ user_id         │                             └─────────────────┘
-│ role            │
-└─────────────────┘     ┌─────────────────┐     ┌─────────────────┐
-                        │    matrices     │     │    concepts     │
-                        ├─────────────────┤     ├─────────────────┤
-                        │ id (PK)         │◄────│ matrix_id (FK)  │
-                        │ name            │     │ id (PK)         │
-                        │ description     │     │ name            │
-                        │ function_ids    │     │ description     │
-                        │ user_id         │     │ selections      │
-                        │ created_at      │     │ generated_by    │
-                        │ updated_at      │     │ created_at      │
-                        └─────────────────┘     └─────────────────┘
-
-┌─────────────────────┐
-│  ai_concept_cache   │
-├─────────────────────┤
-│ id (PK)             │
-│ user_id             │
-│ selections_hash     │
-│ selections          │
-│ options             │
-│ concepts            │
-│ created_at          │
-│ expires_at          │
-└─────────────────────┘
-```
+- **profiles** — user info (name, email, avatar), linked 1:1 to `auth.users`
+- **user_roles** — role assignment per user (`app_role`)
+- **functions** — reusable design functions, categorized, public or user-owned
+- **principles** — solution principles linked to a function, with complexity/cost/tags
+- **matrices** — a morphological matrix (name, description, selected function ids)
+- **concepts** — a saved combination of principles for a matrix, manual or AI-generated
+- **ai_concept_cache** — cached AI results keyed by a hash of selections + generation options
 
 ### Enums
 
