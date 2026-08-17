@@ -21,9 +21,10 @@ interface PrincipleModalProps {
   onOpenChange: (open: boolean) => void;
   editingPrinciple?: Principle;
   defaultFunctionId?: string;
+  onCreated?: (principleId: string) => void;
 }
 
-export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFunctionId }: PrincipleModalProps) {
+export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFunctionId, onCreated }: PrincipleModalProps) {
   const { functions } = useFunctions();
   const { addPrinciple, updatePrinciple, isAdding, isUpdating } = usePrinciples();
   const { uploadImage, deleteImage, isUploading } = useImageUpload();
@@ -218,16 +219,21 @@ export function PrincipleModal({ open, onOpenChange, editingPrinciple, defaultFu
         cost 
       });
     } else {
-      addPrinciple({
-        title,
-        description,
-        functionId,
-        imageUrl: finalImageUrl || null,
-        tags,
-        complexity,
-        cost,
-        isPublic: true,
-      });
+      addPrinciple(
+        {
+          title,
+          description,
+          functionId,
+          imageUrl: finalImageUrl || null,
+          tags,
+          complexity,
+          cost,
+          isPublic: true,
+        },
+        {
+          onSuccess: (created) => onCreated?.(created.id),
+        }
+      );
     }
     onOpenChange(false);
   };

@@ -595,6 +595,12 @@ export default function MatrixEditor() {
         open={principleModalOpen}
         onOpenChange={setPrincipleModalOpen}
         defaultFunctionId={searchFunctionId}
+        onCreated={(principleId) => {
+          if (searchFunctionId) {
+            handleSelectPrinciple(searchFunctionId, principleId);
+            incrementUsage(principleId);
+          }
+        }}
       />
 
       <PrincipleSearchModal

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Table2, Mail, Lock, User, Eye, EyeOff, Users } from 'lucide-react';
+import { Table2, Mail, Lock, User, Eye, EyeOff, Users, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,10 +35,30 @@ export default function Register() {
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [teamId, setTeamId] = useState<string>('');
   const [requiresTeam, setRequiresTeam] = useState(false);
+  const [emailCheck, setEmailCheck] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
 
   useEffect(() => {
     if (user && !loading) navigate('/dashboard', { replace: true });
   }, [user, loading, navigate]);
+
+  // Live-checks whether the typed email is authorized by a teacher, as the user types.
+  useEffect(() => {
+    if (!z.string().email().safeParse(email).success) {
+      setEmailCheck('idle');
+      return;
+    }
+    setEmailCheck('checking');
+    const timeout = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('validate-invitation', { body: { email } });
+        if (error) throw error;
+        setEmailCheck(data?.valid ? 'valid' : 'invalid');
+      } catch {
+        setEmailCheck('idle');
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,8 +147,17 @@ export default function Register() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setRequiresTeam(false); setTeams([]); setTeamId(''); }} className="pl-10" required />
+                <Input id="email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); setRequiresTeam(false); setTeams([]); setTeamId(''); }} className="pl-10 pr-10" required />
+                {emailCheck === 'checking' && <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin" />}
+                {emailCheck === 'valid' && <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-success" />}
+                {emailCheck === 'invalid' && <XCircle className="absolute right-3 top-3 h-4 w-4 text-destructive" />}
               </div>
+              {emailCheck === 'invalid' && (
+                <p className="text-xs text-destructive">Este e-mail não foi autorizado por nenhum professor.</p>
+              )}
+              {emailCheck === 'valid' && (
+                <p className="text-xs text-success">E-mail autorizado, pode continuar.</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>

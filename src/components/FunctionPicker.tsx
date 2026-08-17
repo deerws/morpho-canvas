@@ -13,7 +13,7 @@ interface FunctionPickerProps {
   className?: string;
 }
 
-export function FunctionPicker({ functions, onSelect, placeholder = '+ Adicionar função existente...', className }: FunctionPickerProps) {
+export function FunctionPicker({ functions, onSelect, placeholder = 'Adicionar função existente...', className }: FunctionPickerProps) {
   const [open, setOpen] = useState(false);
 
   return (
